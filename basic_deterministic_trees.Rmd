@@ -3,49 +3,227 @@ title: Basic Deterministic Trees
 output: github_document
 ---
 
-```{r, message = F}
+```{r, message = F, warning = F}
 library(tidyverse)
 ```
 
 Early attempts at making, storing, and drawing line segments.
 ```{r}
+gr <- 1.272018
+
 X0 <- rep(0, 100)
 Y0 <- seq(0, 1, length.out = 100)
 
-theta0 <- 0
-b0 <- tibble(x = round(X0*cos(theta0) - Y0*sin(theta0), 3),
-             y = round(X0*sin(theta0) + Y0*cos(theta0), 3),
-             branch = rep(0,100),
-             thickness = rep(1/sqrt(2), 100))
-tree <- b0
+theta_0 <- 0
+b_0 <- tibble(x = round(X0*cos(theta_0) - Y0*sin(theta_0), 3),
+              y = round(X0*sin(theta_0) + Y0*cos(theta_0), 3),
+              branch = rep("0",100),
+              thickness = seq(1, 1/gr, length.out = 100))
+tree <- b_0
 
 ggplot(tree) + 
-  geom_point(aes(x, y))
+  geom_point(aes(x, y, size = thickness)) +
+  coord_fixed() + theme(legend.position="none")
 ```
 
 Try to rotate
 ```{r}
-tree <- b0
-
 X1 <- rep(0, 100)
-Y1 <- seq(0, 0.5, length.out = 100)
+Y1 <- seq(0, 1/gr, length.out = 100)
 
-theta1a = theta0 + pi/6
-b1a <- tibble(x = round(X1*cos(theta1a) - Y1*sin(theta1a) + b0$x[100], 3),
-              y = round(X1*sin(theta1a) + Y1*cos(theta1a) + b0$y[100], 3),
-              branch = rep("1a", 100),
-              thickness = rep(1/sqrt(2.5), 100))
+theta_01a = theta_0 + pi/6
+b_01a <- tibble(x = round(X1*cos(theta_01a) - Y1*sin(theta_01a) + b_0$x[100], 3),
+                y = round(X1*sin(theta_01a) + Y1*cos(theta_01a) + b_0$y[100], 3),
+                branch = rep("1a", 100),
+                thickness = seq(1/gr,1/gr^2, length.out = 100))
 
-tree <- rbind(tree,b1a)
+tree <- rbind(tree,b_01a)
 
-theta1b = theta0 - pi/6
-b1b <- tibble(x = round(X1*cos(theta1b) - Y1*sin(theta1b) + b0$x[100], 3),
-              y = round(X1*sin(theta1b) + Y1*cos(theta1b) + b0$y[100], 3),
-              branch = rep("1b", 100),
-              thickness = rep(1/sqrt(2.5), 100))
+theta_01b = theta_0 - pi/6
+b_01b <- tibble(x = round(X1*cos(theta_01b) - Y1*sin(theta_01b) + b_0$x[100], 3),
+                y = round(X1*sin(theta_01b) + Y1*cos(theta_01b) + b_0$y[100], 3),
+                branch = rep("1b", 100),
+                thickness = seq(1/gr,1/gr^2, length.out = 100))
 
-tree <- rbind(tree,b1b)
+tree <- rbind(tree,b_01b)
 
 ggplot(tree) + 
-  geom_point(aes(x, y))
+  geom_point(aes(x, y, size = thickness)) + 
+  coord_fixed() + theme(legend.position="none")
 ```
+
+Adding branches to branches
+```{r}
+X2 <- rep(0, 100)
+Y2 <- seq(0, 1/gr^2, length.out = 100)
+
+theta_01a2a = theta_01a + pi/6/gr
+b_01a2a <- tibble(x = round(X2*cos(theta_01a2a) - Y2*sin(theta_01a2a) + b_01a$x[100], 3),
+                  y = round(X2*sin(theta_01a2a) + Y2*cos(theta_01a2a) + b_01a$y[100], 3),
+                  branch = rep("2a", 100),
+                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
+
+tree <- rbind(tree,b_01a2a)
+
+theta_01a2b = theta_01a - pi/6/gr
+b_01a2b <- tibble(x = round(X2*cos(theta_01a2b) - Y2*sin(theta_01a2b) + b_01a$x[100], 3),
+                  y = round(X2*sin(theta_01a2b) + Y2*cos(theta_01a2b) + b_01a$y[100], 3),
+                  branch = rep("2b", 100),
+                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
+
+tree <- rbind(tree,b_01a2b)
+
+theta_01b2c = theta_01b + pi/6/gr
+b_01b2c <- tibble(x = round(X2*cos(theta_01b2c) - Y2*sin(theta_01b2c) + b_01b$x[100], 3),
+                  y = round(X2*sin(theta_01b2c) + Y2*cos(theta_01b2c) + b_01b$y[100], 3),
+                  branch = rep("2c", 100),
+                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
+
+tree <- rbind(tree,b_01b2c)
+
+theta_01b2d = theta_01b - pi/6/gr
+b_01b2d <- tibble(x = round(X2*cos(theta_01b2d) - Y2*sin(theta_01b2d) + b_01b$x[100], 3),
+                  y = round(X2*sin(theta_01b2d) + Y2*cos(theta_01b2d) + b_01b$y[100], 3),
+                  branch = rep("2d", 100),
+                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
+?seq
+tree <- rbind(tree,b_01b2d)
+
+ggplot(tree) + 
+  geom_point(aes(x, y, size = thickness)) + 
+  coord_fixed() + theme(legend.position="none")
+```
+
+# Develop recursive function to make trees from deterministic inputs here.
+
+### Input arguments
+
+levels                 # (int) Indicates number of levels beyond starting branch. \newline
+length                 # (dbl) Indicates length of a branch. \newline
+scale_length           # (lgl) Indicates if lengths should be scaled at each new level. \newline
+length_scale           # (dbl) Indicates rate in which branch lengths shorten at each level. \newline
+splits                 # (int) Indicates number of new branches at each split. \newline
+start_angle            # (dbl) Indicates angle of starting branch, measured ccw from +y direction. \newline
+angle                  # (dbl) Indicates angle between each branch at a split. \neline
+scale_angle            # (lgl) Indicates if branch split angles should be scaled at each new level. \newline
+thickness              # (dbl) Indicates thickness of a branch. \newline
+taper                  # (lgl) Indicates if branches should taper. \newline
+taper_scale            # (dbl) Indicates rate of branch taper from start to end \newline
+
+man_lengths            # Manually select branch length for starting branch and branches at each level. \newline
+man_angles             # Manually select angles between branches at each split by level. \newline
+man_split_thickness    # Manually select thickness of each branch at each split in order. \newline
+man_begin_thick        # Manually select starting thickness. \newline
+man_end_thick          # Manually select ending thickness. \newline
+man_splits             # Manually select number of branches at split by level. \newline
+
+### First try at function
+
+```{r}
+
+basic_deterministic_trees <- function(levels = 3, 
+                                      length = 1,
+                                      scale_length = T,
+                                      length_scale = 1.272018,
+                                      splits = 2,
+                                      start_angle = 0,
+                                      angle = pi/(2*splits + 2),
+                                      scale_angle = F,
+                                      angle_scale = 1.272018,
+                                      thickness = 1,
+                                      taper = T,
+                                      taper_scale = 1.61803,
+                                      man_lengths = 0,
+                                      man_angles = 0,
+                                      man_split_thickness = 0,
+                                      man_begin_thick = 0,
+                                      man_end_thick = 0,
+                                      man_splits = 0){
+  
+  inputs = list(levels = levels,
+                length = length,
+                scale_length = scale_length,
+                length_scale = length_scale,
+                splits = splits,
+                start_angle = start_angle,
+                angle = angle,
+                scale_angle = scale_angle,
+                angle_scale = angle_scale,
+                man_lengths = man_lengths,
+                man_split_thickness = man_split_thickness,
+                man_begin_thick = man_begin_thick,
+                man_end_thick = man_end_thick,
+                man_splits = man_splits)
+  
+  # Get branch length information and make table of coordinates
+  X <- rep(0, 100)
+  if(man_lengths){
+    lengths <- man_lengths
+    scale_length <- F
+    Ys <- map_dfc(lengths, ~ seq(0, ., length.out=100)) %>% 
+      set_names(map_chr(0:levels, ~ paste(.)))
+    }
+  if(scale_length){
+    lengths <- map_dbl(0:(levels), ~ length/length_scale^(.))
+    Ys <- map_dfc(lengths, ~ seq(0, ., length.out=100)) %>% 
+      set_names(map_chr(0:levels, ~ paste(.)))
+  }else{
+    lengths <- rep(length, levels+1)
+    Ys <- map_dfc(lengths, ~ seq(0, 1, length.out=100)) %>% 
+      set_names(map_chr(0:levels, ~ paste(.)))
+      }
+  
+  # Get branch angle information
+  if(man_angles){
+    angles <- man_angles
+    scale_angle <- F
+    }
+  if(scale_angle){
+    angles <- c(start_angle, map_dbl(1:levels, ~ angle/angle_scale^(. - 1)))
+  }else{
+    angles <- c(start_angle, rep(angle, levels))
+    }
+  
+  # Get thickness information
+  if(man_split_thickness){
+    thicknesses <- c(man_begin_thick,
+                     man_split_thickness,
+                     man_end_thick)
+    taper <- F
+    ts <- map_dfc(1:(levels+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100)) %>% 
+      set_names(map_chr(0:levels, ~ paste(.)))
+  }
+  if(taper){
+    thicknesses <- map_dbl(0:(levels+1), ~ thickness/taper_scale^(.))
+    ts <- map_dfc(1:(levels+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100)) %>% 
+      set_names(map_chr(0:levels, ~ paste(.)))
+  }else{
+    ts <- map_dfc(1:(levels+1), ~ rep(thickness, 100)) %>% 
+      set_names(map_chr(0:levels, ~ paste(.)))
+    }
+  
+  # Get information on number of splits at each level
+  if(man_splits){splits <- man_splits
+  }else{splits <- rep(splits, levels)}
+  
+  # List to contain each branch's information
+  branches <- list("0" <- )
+  
+}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

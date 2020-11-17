@@ -3,7 +3,7 @@ TODO
 
 ## Preliminary Work
 
-  - \[ \] Find way to draw customizable line segments in R.
+  - \[x\] Find way to draw customizable line segments in R.
   - \[ \] Write recursive function that systematically creates and
     connects lines segments.
   - \[ \] Explore functions until able to consistently and quickly
