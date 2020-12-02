@@ -1,0 +1,16 @@
+---
+title: Nature of Code - Examples 8.6 and 8.7
+output: github_document
+---
+
+
+
+```{r}
+par(mfrow=c(1,3), mar=c(1,1,1,1))
+basic_deterministic_trees(splits = 8, children = 2, angle = 9*pi/12, scale_angle = F, 
+                          scale_thickness = F, taper = F, thickness = 0.5, length_scale = 1.5)
+basic_deterministic_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, 
+                          scale_thickness = F, taper = F, thickness = 0.5, length_scale = 1.5)
+basic_deterministic_trees(splits = 8, children = 2, angle = pi/20, scale_angle = F, 
+                          scale_thickness = F, taper = F, thickness = 0.5, length_scale = 1.5)
+```

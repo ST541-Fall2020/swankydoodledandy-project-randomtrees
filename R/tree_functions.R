@@ -1,133 +1,3 @@
----
-title: Basic Deterministic Trees
-output: github_document
----
-
-```{r, message = F, warning = F}
-library(tidyverse)
-library(gridExtra)
-```
-
-Early attempts at making, storing, and drawing line segments.
-```{r}
-gr <- 1.272018
-
-X0 <- rep(0, 100)
-Y0 <- seq(0, 1, length.out = 100)
-
-theta_0 <- 0
-b_0 <- tibble(x = round(X0*cos(theta_0) - Y0*sin(theta_0), 3),
-              y = round(X0*sin(theta_0) + Y0*cos(theta_0), 3),
-              branch = rep("0",100),
-              thickness = seq(1, 1/gr, length.out = 100))
-tree <- b_0
-
-ggplot(tree) + 
-  geom_point(aes(x, y, size = thickness)) +
-  coord_fixed() + theme(legend.position="none")
-```
-
-Try to rotate
-```{r}
-X1 <- rep(0, 100)
-Y1 <- seq(0, 1/gr, length.out = 100)
-
-theta_01a = theta_0 + pi/6
-b_01a <- tibble(x = round(X1*cos(theta_01a) - Y1*sin(theta_01a) + b_0$x[100], 3),
-                y = round(X1*sin(theta_01a) + Y1*cos(theta_01a) + b_0$y[100], 3),
-                branch = rep("1a", 100),
-                thickness = seq(1/gr,1/gr^2, length.out = 100))
-
-tree <- rbind(tree,b_01a)
-
-theta_01b = theta_0 - pi/6
-b_01b <- tibble(x = round(X1*cos(theta_01b) - Y1*sin(theta_01b) + b_0$x[100], 3),
-                y = round(X1*sin(theta_01b) + Y1*cos(theta_01b) + b_0$y[100], 3),
-                branch = rep("1b", 100),
-                thickness = seq(1/gr,1/gr^2, length.out = 100))
-
-tree <- rbind(tree,b_01b)
-
-ggplot(tree) + 
-  geom_point(aes(x, y, size = thickness)) + 
-  coord_fixed() + theme(legend.position="none")
-```
-
-Adding branches to branches
-```{r}
-X2 <- rep(0, 100)
-Y2 <- seq(0, 1/gr^2, length.out = 100)
-
-theta_01a2a = theta_01a + pi/6/gr
-b_01a2a <- tibble(x = round(X2*cos(theta_01a2a) - Y2*sin(theta_01a2a) + b_01a$x[100], 3),
-                  y = round(X2*sin(theta_01a2a) + Y2*cos(theta_01a2a) + b_01a$y[100], 3),
-                  branch = rep("2a", 100),
-                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
-
-tree <- rbind(tree,b_01a2a)
-
-theta_01a2b = theta_01a - pi/6/gr
-b_01a2b <- tibble(x = round(X2*cos(theta_01a2b) - Y2*sin(theta_01a2b) + b_01a$x[100], 3),
-                  y = round(X2*sin(theta_01a2b) + Y2*cos(theta_01a2b) + b_01a$y[100], 3),
-                  branch = rep("2b", 100),
-                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
-
-tree <- rbind(tree,b_01a2b)
-
-theta_01b2c = theta_01b + pi/6/gr
-b_01b2c <- tibble(x = round(X2*cos(theta_01b2c) - Y2*sin(theta_01b2c) + b_01b$x[100], 3),
-                  y = round(X2*sin(theta_01b2c) + Y2*cos(theta_01b2c) + b_01b$y[100], 3),
-                  branch = rep("2c", 100),
-                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
-
-tree <- rbind(tree,b_01b2c)
-
-theta_01b2d = theta_01b - pi/6/gr
-b_01b2d <- tibble(x = round(X2*cos(theta_01b2d) - Y2*sin(theta_01b2d) + b_01b$x[100], 3),
-                  y = round(X2*sin(theta_01b2d) + Y2*cos(theta_01b2d) + b_01b$y[100], 3),
-                  branch = rep("2d", 100),
-                  thickness = seq(1/gr^2,1/gr^3, length.out = 100))
-?seq
-tree <- rbind(tree,b_01b2d)
-
-ggplot(tree) + 
-  geom_point(aes(x, y, size = thickness)) + 
-  coord_fixed() + theme(legend.position="none")
-```
-
-# Develop recursive function to make trees from deterministic inputs here.
-
-### Input arguments
-
-<b>splits</b>                 : (int) Indicates number of levels beyond starting branch. <br>
-<b>length</b>                 : (dbl) Indicates length of a branch. <br>
-<b>scale_length</b>           : (lgl) Indicates if lengths should be scaled at each new level. <br>
-<b>length_scale</b>           : (dbl) Indicates rate in which branch lengths shorten at each level. <br>
-<b>children</b>               : (int) Indicates number of new branches at each new level. <br>
-<b>start_angle</b>            : (dbl) Indicates angle in radians of starting branch, measured ccw from +y direction. <br>
-<b>angle</b>                  : (dbl) Indicates angle in radian between each branch at a split. <br>
-<b>scale_angle</b>            : (lgl) Indicates if branch split angles should be scaled at each new level. <br>
-<b>angle_scale</b>            : (lgl) Indicates rate at which angles should decrease <br>
-<b>thickness</b>              : (dbl) Indicates thickness of a branch. <br>
-<b>scale_thickness</b>        : (lgl) Indicates if thickness should should shrink at each new level <br>
-<b>thickness_scale</b>        : (dbl) Indicates rate in which branch thicknesses should shrink <br>
-<b>taper</b>                  : (lgl) Indicates if branches should taper. <br>
-<br>
-<b>man_lengths</b>            : Manually select branch length for starting branch and branches at each level. <br>
-<b>man_angles</b>             : Manually select angles between branches at each split by level. <br>
-<b>man_split_thickness</b>    : Manually select thickness of each branch at each split in order. <br>
-<b>man_begin_thick</b>        : Manually select starting thickness. <br>
-<b>man_end_thick</b>          : Manually select ending thickness. <br>
-<b>man_children</b>           : Manually select number of branches at split by level. <br>
-<b>sib_ratio</b>              : Only works if equal number of children at each split. Indicates relative size of children. <br>
-<br>
-<b>title</b>                  : (chr) Optional title for output tree. <br>
-<b>plot</b>                   : (lgl) Default to T for plotting <br>
-<b>datadump</b>               : (lgl) Default to F. Set to T get relevant data.
-
-### First try at function
-
-```{r}
 basic_deterministic_trees <- function(splits = 3, 
                                       length = 2,
                                       scale_length = T,
@@ -212,11 +82,11 @@ basic_deterministic_trees <- function(splits = 3,
   if(man_angles){ # Uses manually selected angles between branches for each split level
     angles <- man_angles
     scale_angle <- F # Manual angles not scaleable within current scope
-    } else if(scale_angle){ # Iteratively scales selected angle by constant factor at each split
-      angles <- c(start_angle, map_dbl(1:splits, ~ angle/angle_scale^(. - 1)))
-      } else{ # Uses constant angle between branches at splits
-        angles <- c(start_angle, rep(angle, splits))
-      }
+  } else if(scale_angle){ # Iteratively scales selected angle by constant factor at each split
+    angles <- c(start_angle, map_dbl(1:splits, ~ angle/angle_scale^(. - 1)))
+  } else{ # Uses constant angle between branches at splits
+    angles <- c(start_angle, rep(angle, splits))
+  }
   # Get the total angle for each branch, including starting branch
   angles <- c(rep(angles[1], prod(children)), 
               unlist(map(1:splits,
@@ -245,16 +115,16 @@ basic_deterministic_trees <- function(splits = 3,
     Zs <- suppressMessages(map_dfc(lengths, ~ seq(0, 1, length.out=100))) %>% 
       set_names(map_chr(0:splits, ~ paste(.)))
   }
-
+  
   # Make matrices of unrotated/unstacked coordinates
   Z_coords <- matrix(unlist(map(1:(splits+1), 
                                 ~ rep(Zs[,.], times = if(.==1){1}else{prod(children[1:(.-1)])}))), 
-               ncol = length(angles))
+                     ncol = length(angles))
   # If "sib_ratio" selected, rescales lengths
   if(length(sib_ratio)>1){
-      sib_ratio <- sib_ratio/max(sib_ratio)
-      sib_ratio <- c(1, rep(sib_ratio, sum(cumprod(c(1,children[-1])))))
-      Z_coords <- Z_coords %*% diag(sib_ratio)
+    sib_ratio <- sib_ratio/max(sib_ratio)
+    sib_ratio <- c(1, rep(sib_ratio, sum(cumprod(c(1,children[-1])))))
+    Z_coords <- Z_coords %*% diag(sib_ratio)
   } else {
     sib_ratio <- rep(1, sum(c(1,cumprod(children))))
   }
@@ -315,10 +185,10 @@ basic_deterministic_trees <- function(splits = 3,
     thicknesses <- map_dbl(0:(splits+1), ~ thickness/thickness_scale^(.))
     ts <- suppressMessages(map_dfc(1:(splits+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100))) %>% 
       set_names(map_chr(0:splits, ~ paste(.)))
-    } else{ # Uses chosen starting thickness throughout
-      ts <- suppressMessages(map_dfc(1:(splits+1), ~ rep(thickness, 100))) %>% 
-        set_names(map_chr(0:splits, ~ paste(.)))
-    }
+  } else{ # Uses chosen starting thickness throughout
+    ts <- suppressMessages(map_dfc(1:(splits+1), ~ rep(thickness, 100))) %>% 
+      set_names(map_chr(0:splits, ~ paste(.)))
+  }
   # Create of vectors of thicknesses to pair with vectors of coordinates
   thickness_per_point <- unlist(map(1:(splits+1), 
                                     ~ rep(ts[,.], times = if(.==1){1}else{prod(children[1:(.-1)])})))
@@ -339,7 +209,7 @@ basic_deterministic_trees <- function(splits = 3,
   tree <- tibble(X = X_coords,
                  Z = Z_coords,
                  thickness = thickness_per_point)
-
+  
   branch_info <- tibble(branch = 1:length(angles),
                         sibling_path_name = names1,
                         parents_path_name = names2,
@@ -351,7 +221,7 @@ basic_deterministic_trees <- function(splits = 3,
                         start_thickness = thickness_per_point[seq(1,(length(angles)*100), by = 100)],
                         end_thickness = thickness_per_point[seq(100,(length(angles)*100), by = 100)])
   
-
+  
   
   plotinfo <- list(x = tree$X, y = tree$Z,
                    pch = 16, cex = tree$thickness,
@@ -365,7 +235,7 @@ basic_deterministic_trees <- function(splits = 3,
                              branch_info = branch_info,
                              plot_info = plotinfo)
   
-
+  
   if(plot) {
     par(mar=c(1,1,1,1))
     plot(x = tree$X, y = tree$Z,
@@ -377,108 +247,3 @@ basic_deterministic_trees <- function(splits = 3,
   
   if(datadump) return(deterministic_tree)
 }
-```
-
-
-
-### Testing "splits" input with others set to default
-```{r}
-par(mfrow=c(2,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 1, title = "splits = 1")
-basic_deterministic_trees(splits = 2, title = "splits = 2")
-basic_deterministic_trees(title = "default splits = 3")
-basic_deterministic_trees(splits = 4, title = "splits = 4")
-basic_deterministic_trees(splits = 5, title = "splits = 5")
-basic_deterministic_trees(splits = 6, title = "splits = 6")
-
-# Check for improper "splits" input
-rbind(basic_deterministic_trees(splits = 0.3),
-      basic_deterministic_trees(splits = -2),
-      basic_deterministic_trees(splits = "test"))
-```
-
-### Test "children" and "man_children" with others set to default
-```{r}
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(children = 1, title = "children = 1")
-basic_deterministic_trees(title = "default children = 2")
-basic_deterministic_trees(children = 3, title = "children = 3")
-basic_deterministic_trees(children = 4, title = "children = 4")
-```
-
-```{r}
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(man_children = c(1,2,3), title = "man_children = c(1,2,3)")
-basic_deterministic_trees(man_children = c(3,2,1), title = "man_children = c(3,2,1)")
-# Having "man_children" length =/= "splits" changes "splits" to length.
-basic_deterministic_trees(man_children = 4, title = "man_children = 4")
-basic_deterministic_trees(man_children = c(3,3,3,3,3), title = "man_children = c(3,3,3,3,3)")
-```
-
-### The role of tapering and scaling at each split for "splits = 5"
-```{r}
-par(mfrow=c(2,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 5, title = "all = T")
-basic_deterministic_trees(splits = 5, taper = F, title = "scale_thickness = T, taper = F")
-basic_deterministic_trees(splits = 5, scale_thickness = F, taper = F, title = "scale_thickness = F, taper = F")
-basic_deterministic_trees(splits = 5, scale_length = F, title = "scale_length = F")
-basic_deterministic_trees(splits = 5, scale_angle = F, title = "scale_angle = F")
-
-# Check for improper inputs
-rbind(basic_deterministic_trees(taper = 2),
-      basic_deterministic_trees(scale_length = "test"),
-      basic_deterministic_trees(scale_angle = 1.5))
-```
-### Exploring "angle_scale" with "splits = 5"
-```{r}
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 5, title = "default angle_scale = 1.127838")
-basic_deterministic_trees(splits = 5, angle_scale = 1.5, title = "scale_angle = 1.5")
-basic_deterministic_trees(splits = 5, angle_scale = 2, title = "scale_angle = 2")
-basic_deterministic_trees(splits = 5, angle_scale = 0.75, title = "scale_angle = 0.75")
-```
-### Exploring "angle_scale" with "splits = 5" 
-```{r}
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 5, length_scale = 1.2, title = "length_scale = 1.2")
-basic_deterministic_trees(splits = 5, title = "default length_scale = 1.61803")
-basic_deterministic_trees(splits = 5, length_scale = 2, title = "length_scale = 2")
-basic_deterministic_trees(splits = 5, length_scale = 0.75, title = "length_scale = 0.75")
-```
-### Exploring "thickness_scale" with "splits = 5" 
-```{r}
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 5, thickness_scale = 1.2, title = "thickness_scale = 1.2")
-basic_deterministic_trees(splits = 5, title = "default thickness_scale = 1.61803")
-basic_deterministic_trees(splits = 5, thickness_scale = 2, title = "thickness_scale = 10")
-# Values less than 1 increase thickness
-basic_deterministic_trees(splits = 5, thickness_scale = 0.95, title = "thickness_scale = 0.95")
-```
-
-### Exploring "sib_ratio" -> "children" determined by length of vector "sib_ratio"
-```{r}
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(sib_ratio = c(1,2), title = "sib_ratio = c(1,2)")
-basic_deterministic_trees(sib_ratio = c(1,2,1), title = "children = 3, sib_ratio = c(1,2,1)")
-# As written if branch given a length of zero, that doesn't mean it won't still have its own children
-basic_deterministic_trees(sib_ratio = c(1,0,1), title = "children = 3, sib_ratio = c(1,0,1)")
-basic_deterministic_trees(sib_ratio = c(1,2,2,1), title = "children = 4, sib_ratio = c(1,2,2,1)")
-```
-
-```{r}
-par(mfrow=c(2,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 8, sib_ratio = c(1,2), title = "splits = 8, sib_ratio = c(1,2)")
-basic_deterministic_trees(splits = 6, sib_ratio = c(1,2,1), title = "splits = 6, sib_ratio = c(1,2,1)")
-basic_deterministic_trees(splits = 5, sib_ratio = c(1,2,2,1), title = "splits = 5, sib_ratio = c(1,2,2,1)")
-basic_deterministic_trees(splits = 5, sib_ratio = c(2,1,1,2), title = "splits = 5, sib_ratio = c(1,2,2,1)")
-basic_deterministic_trees(splits = 6, sib_ratio = c(1,2,3), title = "splits = 6, sib_ratio = c(1,2,3)")
-basic_deterministic_trees(splits = 6, sib_ratio = c(2,1,2), title = "splits = 6, sib_ratio = c(1,2,3)")
-```
-
-
-
-
-
-
-
-
