@@ -110,16 +110,17 @@ ggplot(tree) +
 <br> <b>length</b> : (dbl) Indicates length of a branch. <br>
 <b>scale\_length</b> : (lgl) Indicates if lengths should be scaled at
 each new level. <br> <b>length\_scale</b> : (dbl) Indicates rate in
-which branch lengths shorten at each level. <br> <b>children</b> : (int)
-Indicates number of new branches at each new level. <br>
-<b>start\_angle</b> : (dbl) Indicates angle in radians of starting
-branch, measured ccw from +y direction. <br> <b>angle</b> : (dbl)
-Indicates angle in radian between each branch at a split. <br>
-<b>scale\_angle</b> : (lgl) Indicates if branch split angles should be
-scaled at each new level. <br> <b>angle\_scale</b> : (lgl) Indicates
-rate at which angles should decrease <br> <b>thickness</b> : (dbl)
-Indicates thickness of a branch. <br> <b>scale\_thickness</b> : (lgl)
-Indicates if thickness should should shrink at each new level <br>
+which branch lengths shorten at each level. Vector or single value. <br>
+<b>trunk\_scale</b> : (dbl) Used to vary the relative size of the
+“trunk” <b>children</b> : (int) Indicates number of new branches at
+each new level. <br> <b>start\_angle</b> : (dbl) Indicates angle in
+radians of starting branch, measured ccw from +y direction. <br>
+<b>angle</b> : (dbl) Indicates angle in radian between each branch at a
+split. <br> <b>scale\_angle</b> : (lgl) Indicates if branch split angles
+should be scaled at each new level. <br> <b>angle\_scale</b> : (lgl)
+Indicates rate at which angles should decrease <br> <b>thickness</b> :
+(dbl) Indicates thickness of a branch. <br> <b>scale\_thickness</b> :
+(lgl) Indicates if thickness should should shrink at each new level <br>
 <b>thickness\_scale</b> : (dbl) Indicates rate in which branch
 thicknesses should shrink <br> <b>taper</b> : (lgl) Indicates if
 branches should taper. <br> <br> <b>man\_lengths</b> : Manually select
@@ -143,6 +144,7 @@ basic_deterministic_trees <- function(splits = 3,
                                       length = 2,
                                       scale_length = T,
                                       length_scale = 1.272018^2,
+                                      trunk_scale = 1,
                                       children = 2,
                                       start_angle = 0,
                                       angle = pi/(splits/2 + 1),
@@ -183,6 +185,7 @@ basic_deterministic_trees <- function(splits = 3,
                 length = length,
                 scale_length = scale_length,
                 length_scale = length_scale,
+                trunk_scale = trunk_scale,
                 children = children,
                 start_angle = start_angle,
                 angle = angle,
@@ -248,11 +251,16 @@ basic_deterministic_trees <- function(splits = 3,
       set_names(map_chr(0:splits, ~ paste(.)))
   }
   if(scale_length){
-    lengths <- map_dbl(0:(splits), ~ length/length_scale^(.))
+    if(length(length_scale) < splits){
+      length_scale <- rep(length_scale, splits)
+    }
+    lengths <- map_dbl(1:(splits+1), ~ length/prod(c(1,length_scale)[1:.]))
+    lengths <- lengths %*% diag(c(trunk_scale,rep(1,splits)))
     Zs <- suppressMessages(map_dfc(lengths, ~ seq(0, ., length.out=100))) %>% 
       set_names(map_chr(0:splits, ~ paste(.)))
   } else{
     lengths <- rep(length, splits+1)
+    lengths <- lengths %*% diag(c(trunk_scale,rep(1,splits)))
     Zs <- suppressMessages(map_dfc(lengths, ~ seq(0, 1, length.out=100))) %>% 
       set_names(map_chr(0:splits, ~ paste(.)))
   }
@@ -461,7 +469,8 @@ rbind(basic_deterministic_trees(taper = 2),
     ## [3,] "error: scale_angle should be given a logical value"
 
 ![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-\#\#\# Exploring “angle\_scale” with “splits = 5”
+
+### Exploring “angle\_scale” with “splits = 5”
 
 ``` r
 par(mfrow=c(2,2), mar=c(1,1,1,1))
@@ -472,18 +481,22 @@ basic_deterministic_trees(splits = 5, angle_scale = 0.75, title = "scale_angle =
 ```
 
 ![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-\#\#\# Exploring “angle\_scale” with “splits = 5”
+
+### Exploring “length\_scale” with “splits = 5”
 
 ``` r
-par(mfrow=c(2,2), mar=c(1,1,1,1))
+par(mfrow=c(2,3), mar=c(1,1,1,1))
 basic_deterministic_trees(splits = 5, length_scale = 1.2, title = "length_scale = 1.2")
 basic_deterministic_trees(splits = 5, title = "default length_scale = 1.61803")
 basic_deterministic_trees(splits = 5, length_scale = 2, title = "length_scale = 2")
 basic_deterministic_trees(splits = 5, length_scale = 0.75, title = "length_scale = 0.75")
+basic_deterministic_trees(splits = 5, length_scale = c(2,2,1.5,1,1), title = "length_scale = c(2,2,1.5,1,1)")
+basic_deterministic_trees(splits = 5, length_scale = c(1,1,1.5,2,2), title = "length_scale = c(1,1,1.5,2,2)")
 ```
 
 ![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-\#\#\# Exploring “thickness\_scale” with “splits = 5”
+
+### Exploring “thickness\_scale” with “splits = 5”. Starting thickness = 2 unless stated otherwise.
 
 ``` r
 par(mfrow=c(2,2), mar=c(1,1,1,1))
@@ -491,7 +504,7 @@ basic_deterministic_trees(splits = 5, thickness_scale = 1.2, title = "thickness_
 basic_deterministic_trees(splits = 5, title = "default thickness_scale = 1.61803")
 basic_deterministic_trees(splits = 5, thickness_scale = 2, title = "thickness_scale = 10")
 # Values less than 1 increase thickness
-basic_deterministic_trees(splits = 5, thickness_scale = 0.95, title = "thickness_scale = 0.95")
+basic_deterministic_trees(splits = 5, thickness_scale = 0.8, thickness = 0.5, title = "thickness = 0.5, thickness_scale = 0.8")
 ```
 
 ![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
@@ -520,3 +533,14 @@ basic_deterministic_trees(splits = 6, sib_ratio = c(2,1,2), title = "splits = 6,
 ```
 
 ![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+### Explore “trunk\_scale”. It simply shrinks the starter branch. Other arguments: “splits = 6, angle\_scale = 1.25, sib\_ratio = c(1,5,1)”
+
+``` r
+par(mfrow=c(1,3), mar=c(1,1,1,1))
+basic_deterministic_trees(splits = 6, angle_scale = 1.25, sib_ratio = c(1,5,1), title = "default: trunk_scale = 1")
+basic_deterministic_trees(splits = 6, trunk_scale = 0.75, angle_scale = 1.25, sib_ratio = c(1,5,1), title = "trunk_scale = 0.75")
+basic_deterministic_trees(splits = 6, trunk_scale = 0.25, angle_scale = 1.25, sib_ratio = c(1,4,1), title = "trunk_scale = 0.25")
+```
+
+![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
