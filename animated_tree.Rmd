@@ -81,7 +81,7 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
 }
 ```
 
-<img src="swaying_tree_2020-12-02_14:54:08_PST.gif">
+<img src="swaying_trees/swaying_tree_2020-12-02_14:54:08_PST.gif">
 
 
 

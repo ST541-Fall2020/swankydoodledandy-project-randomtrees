@@ -9,4 +9,4 @@ output: github_document
 * [x] Explore functions until able to consistently and quickly approximate trees of example 8.6 in "Nature of Code". Complete development of `nature_of_code_examples.Rmd`.
 * [x] Apply randomizations. Create some reproducible examples. Complete development of `random_trees.Rmd`.
 * [x] Create animations of tree swaying in wind using RandomField sampling. Complete development of `animated_tree.Rmd`.
-
+* [ ] Finish documentation, README, etc.
