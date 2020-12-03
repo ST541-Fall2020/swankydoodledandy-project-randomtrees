@@ -22,7 +22,7 @@ fractal_tree <- suppressMessages(random_trees(splits = 8, children = 2, angle = 
 swaying_tree(fractal_tree, var = 0.02, scale = 0.4)
 ```
 
-    ## [1] GIF file saved as swaying_tree_2020-12-02_15:59:27_PST.gif in current directory.
+    ## [1] GIF file saved as swaying_tree_2020-12-02_16:05:09_PST.gif in current directory.
 
 # Swaying Tree
 
@@ -80,7 +80,7 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
   
   #run ImageMagick
   filename <- paste("swaying_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
-  system(paste("convert *.png -delay 20x100 -loop 0 ", filename, sep = ""))
+  system(paste("convert *.png -delay 200x100 -loop 0 ", filename, sep = ""))
   invisible(file.remove(list.files(pattern=".png")))
   
   rm(levels, family, xlim, ylim, X_coords, Z_coords, X_coords_stacked, 

@@ -7,7 +7,7 @@
 basic_deterministic_trees <- function(splits = 3, 
                                       length = 2,
                                       scale_length = T,
-                                      length_scale = 1.272018^2,
+                                      length_scale = 1.4,
                                       trunk_scale = 1,
                                       children = 2,
                                       start_angle = 0,
@@ -633,7 +633,7 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
   simu <- suppressMessages(as.matrix(RandomFields::RFsimulate(model, x, y, grid=TRUE)))
   
   rename <- function(x){
-    return(name <- paste('00', x,'plot.png', sep=''))
+    return(name <- paste('swaying_trees/00', x,'plot.png', sep=''))
   }
   
   path <- fs::path("swaying_trees")
@@ -670,12 +670,12 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
   }
   
   #run ImageMagick
-  filename <- paste("swaying_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
-  system(paste("convert *.png -delay 20x100 -loop 0 ", filename, sep = ""))
-  invisible(file.remove(list.files(pattern=".png")))
+  filename <- paste("swaying_trees/swaying_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
+  system(paste("convert *.png -delay 200x100 -loop 0 ", filename, sep = ""))
+  invisible(file.remove(paste("swaying_trees/",list.files("swaying_trees/",pattern=".png"), sep="")))
   
   rm(levels, family, xlim, ylim, X_coords, Z_coords, X_coords_stacked, 
-     Z_coords_stacked, model, branch, x, y, simu, name, wind_angles)
+     Z_coords_stacked, model, branch_count, x, y, simu, name, wind_angles)
   
-  return(noquote(paste("GIF file saved as ", filename, " in current directory.", sep = "")))
+  return(noquote(paste("GIF file saved as ", filename, " within folder 'swaying_trees' in current directory.", sep = "")))
 }

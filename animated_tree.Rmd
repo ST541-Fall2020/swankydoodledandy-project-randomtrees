@@ -70,14 +70,15 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
   }
   
   #run ImageMagick
-  filename <- paste("swaying_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
-  system(paste("convert *.png -delay 20x100 -loop 0 ", filename, sep = ""))
-  invisible(file.remove(list.files(pattern=".png")))
+  filename <- paste("swaying_trees/swaying_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
+  system(paste("convert *.png -delay 200x100 -loop 0 ", filename, sep = ""))
+  #invisible(file.remove(list.files(pattern=".png")))
+  invisible(file.remove(paste("swaying_trees/",list.files("swaying_trees/",pattern=".png"), sep="")))
   
   rm(levels, family, xlim, ylim, X_coords, Z_coords, X_coords_stacked, 
-     Z_coords_stacked, model, branch, x, y, simu, file_name, name, wind_angles)
+     Z_coords_stacked, model, branch_count, x, y, simu, file_name, name, wind_angles)
   
-  return(noquote(paste("GIF file saved as ", filename, " in current directory.", sep = "")))
+  return(noquote(paste("GIF file saved as ", filename, " in folder 'swaying_trees'.", sep = "")))
 }
 ```
 
@@ -86,7 +87,15 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
 
 
 
+```{r}
+model <- RandomFields::RMexp(var = 0.02, scale = 0.4)
+branch_count <- sum(cumprod(fractal_tree$fun_variables$children)) + 1
+x <- seq(0, 10, length.out = 100)
+y <- seq(0, 10, length.out = branch_count)
+simu <- suppressMessages(as.matrix(RandomFields::RFsimulate(model, x, y, grid=TRUE)))
 
+raster::plot(raster::raster(simu))
+```
 
 
 

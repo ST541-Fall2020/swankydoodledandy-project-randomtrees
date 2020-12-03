@@ -1,7 +1,7 @@
 # Random Trees
 #### Name: Sean Gilligan
 
-This project demonstrates some basic techniques for making trees in R, starting with deterministic methods and introducing randomness. This project goes on to explore some artistic and possible practical applications of stochastic trees and L-systems in a hopefully pedagogically informed manner. 
+This project is a "package" that contains functions for making trees in R, starting with deterministic methods and introducing randomness to angles and lengths.  
 
 
 ## Basic Deterministic Trees
@@ -40,3 +40,20 @@ sib_ratio = 0, title = NA, plot = T, datadump = F)
 <b>datadump</b>               : (lgl) Default to F. Set to T get relevant data.
 
 Try to keep children^splits < around 700. Function does not perform well otherwise.
+
+## Random Trees
+
+<b>random_trees</b>(splits = 3, length = 2, scale_length = T, length_scale = 1.4, trunk_scale = 1, children = 2, start_angle = 0, 
+angle = pi/(splits/2 + 1), scale_angle = T, angle_scale = sqrt(1.272018), thickness = 2, scale_thickness = T, thickness_scale = 1.61803, 
+taper = T, man_lengths = 0, man_angles = 0, man_split_thickness = 0, man_begin_thick = 0, man_end_thick = 0, man_children = 0, 
+sib_ratio = 0, title = NA, plot = T, datadump = F, <b>random_angles = T, angle_variance = 0, random_lengths = T, length_variance = 0</b>)
+
+Essentially the same as <b>basic_deterministic_trees()</b> but adds a few input arguments for randomization.
+
+### Added Input Arguments
+
+<b>random_angles</b>                 : (lgl) Toggles angle noise on/off. Random values currently chosen via sampling from normal distribution. <br>
+<b>angle_variance</b>                : (dbl) Indicates base variance for angle noise. By default "set" to zero be given value based on other inputs. In particular by (angles[2]/4)^2, where angles[2] is the angle between branches at the first split.<br>
+<b>random_lengths</b>                : (lgl) Toggles length noise on/off. Random values currently chosen via sampling from normal distribution. <br>
+<b>length_variance</b>               : (dbl) Indicates base variance for length noise. By default "set" to zero be given value later based on other inputs. In particular by lengths[1]/24, where lengths[1] is the length of the starting branch.
+

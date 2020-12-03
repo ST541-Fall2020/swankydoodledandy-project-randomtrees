@@ -415,8 +415,8 @@ basic_deterministic_trees(children = 4, title = "children = 4")
 
 ```{r}
 par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(man_children = c(1,2,3), title = "man_children = c(1,2,3)")
-basic_deterministic_trees(man_children = c(3,2,1), title = "man_children = c(3,2,1)")
+basic_deterministic_trees(man_children = c(2,3,4), title = "man_children = c(4,3,2)")
+basic_deterministic_trees(man_children = c(3,2,3), title = "man_children = c(3,2,3)")
 # Having "man_children" length =/= "splits" changes "splits" to length.
 basic_deterministic_trees(man_children = 4, title = "man_children = 4")
 basic_deterministic_trees(man_children = c(3,3,3,3,3), title = "man_children = c(3,3,3,3,3)")
@@ -450,7 +450,7 @@ basic_deterministic_trees(splits = 5, angle_scale = 0.75, title = "scale_angle =
 ```{r}
 par(mfrow=c(2,3), mar=c(1,1,1,1))
 basic_deterministic_trees(splits = 5, length_scale = 1.2, title = "length_scale = 1.2")
-basic_deterministic_trees(splits = 5, title = "default length_scale = 1.61803")
+basic_deterministic_trees(splits = 5, title = "default length_scale = 1.4")
 basic_deterministic_trees(splits = 5, length_scale = 2, title = "length_scale = 2")
 basic_deterministic_trees(splits = 5, length_scale = 0.75, title = "length_scale = 0.75")
 basic_deterministic_trees(splits = 5, length_scale = c(2,2,1.5,1,1), title = "length_scale = c(2,2,1.5,1,1)")

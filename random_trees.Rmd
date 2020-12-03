@@ -335,7 +335,6 @@ for(i in 1:16){
 ```
 
 ### splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4
-
 ```{r, fig.height = 5}
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
