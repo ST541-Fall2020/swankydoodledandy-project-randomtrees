@@ -5,7 +5,9 @@ Deterministic Trees
 devtools::load_all()
 ```
 
-# Develop recursive function to make trees from deterministic inputs here.
+The function <b>deterministic\_tree()</b> allows the user to make trees
+from deterministic inputs. The input arguments are given below, as well
+a limited exploration of what most the arguments do.
 
 ### Input arguments
 
@@ -34,13 +36,13 @@ thickness of each branch at each split in order. <br>
 <b>man\_begin\_thick</b> : Manually select starting thickness. <br>
 <b>man\_end\_thick</b> : Manually select ending thickness. <br>
 <b>man\_children</b> : Manually select number of branches at split by
-level. <br> <b>sib\_ratio</b> : Only works if equal number of children
-at each split. Indicates relative size of children. <br> <br>
-<b>title</b> : (chr) Optional title for output tree. <br> <b>plot</b> :
-(lgl) Default to T for plotting <br> <b>datadump</b> : (lgl) Default to
-F. Set to T get relevant data.
-
-### First try at function
+level. <br> <b>sib\_lgth\_ratio</b> : Only works if equal number of
+children at each split. Indicates relative length of children. <br>
+<b>sib\_thk\_ratio</b> : Only works if equal number of children at each
+split. Indicates relative thickness of children. <br> <br> <b>title</b>
+: (chr) Optional title for output tree. <br> <b>plot</b> : (lgl) Default
+to T for plotting <br> <b>datadump</b> : (lgl) Default to F. Set to T
+get relevant data.
 
 ### Testing “splits” input with others set to default
 
@@ -54,7 +56,7 @@ deterministic_tree(splits = 5, title = "splits = 5")
 deterministic_tree(splits = 6, title = "splits = 6")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
 
 ``` r
 # Check for improper "splits" input
@@ -78,24 +80,18 @@ deterministic_tree(children = 3, title = "children = 3")
 deterministic_tree(children = 4, title = "children = 4")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
 
 ``` r
 par(mfrow=c(2,2), mar=c(1,1,1,1))
-deterministic_tree(man_children = c(2,3,4), title = "man_children = c(2,3,4)") # Currently experiencing issues
-```
-
-    ## Warning in rbind(rep(0, prod(children)), t(matrix(unlist(lapply(1:splits, :
-    ## number of columns of result is not a multiple of vector length (arg 1)
-
-``` r
 deterministic_tree(man_children = c(3,2,3), title = "man_children = c(3,2,3)")
+deterministic_tree(man_children = c(3,2,2,4,4), title = "man_children = c(3,2,2,4,4)")
 # Having "man_children" length =/= "splits" changes "splits" to length.
-deterministic_tree(man_children = 4, title = "man_children = 4")
+deterministic_tree(man_children = c(4,4), title = "man_children = c(4,4)")
 deterministic_tree(man_children = c(3,3,3,3,3), title = "man_children = c(3,3,3,3,3)")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
 
 ### The role of tapering and scaling at each split for “splits = 5”
 
@@ -118,7 +114,7 @@ rbind(deterministic_tree(taper = 2),
     ## [2,] "error: scale_length should be given a logical value"
     ## [3,] "error: scale_angle should be given a logical value"
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
 ### Exploring “angle\_scale” with “splits = 5”
 
@@ -130,7 +126,7 @@ deterministic_tree(splits = 5, angle_scale = 2, title = "scale_angle = 2")
 deterministic_tree(splits = 5, angle_scale = 0.75, title = "scale_angle = 0.75")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
 
 ### Exploring “length\_scale” with “splits = 5”
 
@@ -144,7 +140,7 @@ deterministic_tree(splits = 5, length_scale = c(2,2,1.5,1,1), title = "length_sc
 deterministic_tree(splits = 5, length_scale = c(1,1,1.5,2,2), title = "length_scale = c(1,1,1.5,2,2)")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
 
 ### Exploring “thickness\_scale” with “splits = 5”. Starting thickness = 2 unless stated otherwise.
 
@@ -157,7 +153,7 @@ deterministic_tree(splits = 5, thickness_scale = 2, title = "thickness_scale = 1
 deterministic_tree(splits = 5, thickness_scale = 0.8, thickness = 0.5, title = "thickness = 0.5, thickness_scale = 0.8")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
 
 ### Exploring “sib\_lgth\_ratio” -\> “children” determined by length of vector “sib\_lgth\_ratio”
 
@@ -170,7 +166,7 @@ deterministic_tree(sib_lgth_ratio = c(1,0,1), title = "children = 3, sib_lgth_ra
 deterministic_tree(sib_lgth_ratio = c(1,2,2,1), title = "children = 4, sib_lgth_ratio = c(1,2,2,1)")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
 ``` r
 par(mfrow=c(2,3), mar=c(1,1,1,1))
@@ -182,29 +178,53 @@ deterministic_tree(splits = 6, sib_lgth_ratio = c(1,2,3), title = "splits = 6, s
 deterministic_tree(splits = 6, sib_lgth_ratio = c(2,1,2), title = "splits = 6, sib_lgth_ratio = c(1,2,3)")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
 ### Similarly, “sib\_thk\_ratio” effects the thickness.
+
+``` r
+par(mfrow=c(2,2), mar=c(1,1,1,1))
+deterministic_tree(sib_thk_ratio = c(1,2), title = "sib_thk_ratio = c(1,2)")
+deterministic_tree(sib_thk_ratio = c(1,2,1), title = "children = 3, sib_thk_ratio = c(1,2,1)")
+deterministic_tree(sib_thk_ratio = c(1,2,3), title = "children = 3, sib_thk_ratio = c(1,2,3)")
+deterministic_tree(sib_thk_ratio = c(1,2,2,1), title = "children = 4, sib_thk_ratio = c(1,2,2,1)")
+```
+
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
 
 ``` r
 par(mfrow=c(2,3), mar=c(1,1,1,1))
 deterministic_tree(splits = 8, sib_thk_ratio = c(1,2), title = "splits = 8, sib_thk_ratio = c(1,2)")
 deterministic_tree(splits = 6, sib_thk_ratio = c(1,2,1), title = "splits = 6, sib_thk_ratio = c(1,2,1)")
-deterministic_tree(splits = 5, sib_thk_ratio = c(1,2,2,1), title = "splits = 5, sib_thk_ratio = c(1,2,2,1)")
-deterministic_tree(splits = 5, sib_thk_ratio = c(2,1,1,2), title = "splits = 5, sib_thk_ratio = c(1,2,2,1)")
-deterministic_tree(splits = 6, sib_thk_ratio = c(1,2,3), title = "splits = 6, sib_thk_ratio = c(1,2,3)")
-deterministic_tree(splits = 6, sib_thk_ratio = c(2,1,2), title = "splits = 6, sib_thk_ratio = c(1,2,3)")
+deterministic_tree(splits = 5, sib_thk_ratio = c(1,1.5,1.5,1), title = "splits = 5, sib_thk_ratio = c(1,1.5,1.5,1)")
+deterministic_tree(splits = 5, sib_thk_ratio = c(1.5,1,1,1.5), title = "splits = 5, sib_thk_ratio = c(1.5,1,1,1.5)")
+deterministic_tree(splits = 6, sib_thk_ratio = c(1,1.5,2), title = "splits = 6, sib_thk_ratio = c(1,1.5,2)")
+deterministic_tree(splits = 6, sib_thk_ratio = c(1.5,1,1.5), title = "splits = 6, sib_thk_ratio = c(1.5,1,1.5)")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
+
+### Both
+
+``` r
+par(mfrow=c(2,3), mar=c(1,1,1,1))
+deterministic_tree(splits = 8, sib_lgth_ratio = c(1,2), sib_thk_ratio = c(2,1), title = "see code")
+deterministic_tree(splits = 7, sib_lgth_ratio = c(1,3,1), sib_thk_ratio = c(1,2,1), title = "see code")
+deterministic_tree(splits = 6, sib_lgth_ratio = c(1,2,2,1), sib_thk_ratio = c(1.5,1,1,1.5), title = "see code")
+deterministic_tree(splits = 5, sib_lgth_ratio = c(2,1,1,2), sib_thk_ratio = c(1,1.5,1.5,1), title = "see code")
+deterministic_tree(splits = 6, sib_lgth_ratio = c(1,2,3), sib_thk_ratio = c(2,1.5,1), title = "see code")
+deterministic_tree(splits = 6, sib_lgth_ratio = c(2,1,2), sib_thk_ratio = c(1,2,1), title = "see code")
+```
+
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-13-1.png" style="display: block; margin: auto;" />
 
 ### Explore “trunk\_scale”. It simply shrinks the starter branch. Other arguments: “splits = 6, angle\_scale = 1.25, sib\_lgth\_ratio = c(1,5,1), sib\_thk\_ratio = c(1,2,1)”
 
 ``` r
 par(mfrow=c(1,3), mar=c(1,1,1,1))
-deterministic_tree(splits = 6, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), sib_lgth_ratio = c(1,5,1), title = "default: trunk_scale = 1")
-deterministic_tree(splits = 6, trunk_scale = 0.75, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), sib_lgth_ratio = c(1,5,1), title = "trunk_scale = 0.75")
-deterministic_tree(splits = 6, trunk_scale = 0.25, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), sib_lgth_ratio = c(1,4,1), title = "trunk_scale = 0.25")
+deterministic_tree(splits = 7, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), sib_lgth_ratio = c(1,5,1), title = "default: trunk_scale = 1")
+deterministic_tree(splits = 7, trunk_scale = 0.75, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), sib_lgth_ratio = c(1,5,1), title = "trunk_scale = 0.75")
+deterministic_tree(splits = 7, trunk_scale = 0.25, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), sib_lgth_ratio = c(1,5,1), title = "trunk_scale = 0.25")
 ```
 
-![](basic_deterministic_trees_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+<img src="basic_deterministic_trees_files/figure-gfm/unnamed-chunk-14-1.png" style="display: block; margin: auto;" />

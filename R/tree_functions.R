@@ -4,7 +4,7 @@
 #
 # Random Trees
 #
-random_trees <- function(splits = 3, 
+random_tree <- function(splits = 3, 
                          length = 2,
                          scale_length = T,
                          length_scale = 1.4,
@@ -104,12 +104,8 @@ random_trees <- function(splits = 3,
   branch_count <- 1 + sum(cumprod(children))
   level_gen_size <- c(1,cumprod(children)) # number of branches in a particular level
   branch_gen_size <- rep(level_gen_size, c(1,cumprod(children))) # number of branches in a level per branch
-  branch_route_count <- rep(rev(level_gen_size), c(1,cumprod(children))) # number of routes containing branch
+  branch_route_count <- rep(rev(c(1,cumprod(rev(children)))), c(1,cumprod(children))) # number of routes containing branch
   family_tree <- t(matrix(rep(1:sum(level_gen_size), branch_route_count), ncol = splits+1)) # columns indicate branch geneology
-  sibling_history <- rbind(rep(0,prod(children)), 
-                           t(matrix(unlist(lapply(1:splits, function(x) 
-                             rep(rep(1:children[x], each = rev(level_gen_size)[x+1]), 
-                                 level_gen_size[x]))), ncol = splits))) # columns indicate sibling of branch in geneology
   
   # Get branch angle information
   if(man_angles){ # Uses manually selected angles between branches for each split level
@@ -151,6 +147,7 @@ random_trees <- function(splits = 3,
   } 
   else{ # All branches same length
     lengths <- rep(length, splits+1)
+    length_scale <- rep(1, splits+1)
   }
   
   # If trunk_scale, rescale trunk length
@@ -277,7 +274,6 @@ random_trees <- function(splits = 3,
                         unstacked_X_coords = X_coords,
                         unstacked_Z_coords = Z_coords,
                         family_tree = family_tree,
-                        sibling_history = sibling_history,
                         branch_count = branch_count,
                         branch_route_count = branch_route_count,
                         level_gen_size = level_gen_size)
@@ -291,7 +287,7 @@ random_trees <- function(splits = 3,
   
   
   branch_info <- tibble::tibble(branch = 1:branch_count,
-                                generation_size = branch_gen_size,
+                                branch_gen_size = branch_gen_size,
                                 length = lengths,
                                 length_noise = length_noise,
                                 angle_rad = angles,
@@ -370,9 +366,9 @@ deterministic_tree <- function(splits = 3,
                                plot = T,
                                datadump = F){
   
-  # Just called the function random_trees() but turns off randomness
+  # Just called the function random_tree() but turns off randomness
   
-  random_trees(splits = splits, 
+  random_tree(splits = splits, 
                length = length,
                scale_length = scale_length,
                length_scale = length_scale,
@@ -423,7 +419,7 @@ plot_tree <- function(fractal_tree, xlim = NULL, ylim = NULL){
   plot(x = fractal_tree$tree$X, y = fractal_tree$tree$Z,
        pch = 16, cex = fractal_tree$tree$thickness,
        xaxt = "n", yaxt = "n", asp = 1,
-       main = random_tree$inputs$title,
+       main = fractal_tree$inputs$title,
        xlab = NA, ylab = NA,
        xlim = xlim, ylim = ylim)
 }
@@ -446,7 +442,7 @@ plot_tree <- function(fractal_tree, xlim = NULL, ylim = NULL){
 #
 # Swaying Tree
 #
-swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
+swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4, return_filename = F){
   
   xlim <- c((min(fractal_tree$tree$X) - 0.1*abs(min(fractal_tree$tree$X))),
             (max(fractal_tree$tree$X) + 0.1*abs(max(fractal_tree$tree$X))))
@@ -523,7 +519,8 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
   rm(xlim, ylim, X_coords, Z_coords, X_coords_stacked, 
      Z_coords_stacked, model, branch_count, x, y, simu, name, wind_angles)
   
-  return(noquote(paste("GIF file saved as ", filename, " in folder 'swaying_trees'.", sep = "")))
+  noquote(paste("GIF file saved as ", filename, " in folder 'swaying_trees'.", sep = ""))
+  if(return_filename) return(filename)
 }
 #
 #
@@ -531,19 +528,20 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
 #
 #
 #
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
 #
 #
-###################################################################################
-###################################################################################
 #
 #
 #
 # Growing Tree
 #
-#
-#
-#
-growing_tree <- function(fractal_tree){
+growing_tree <- function(fractal_tree, return_filename = F){
   
   xlim <- c((min(fractal_tree$tree$X) - 0.1*abs(min(fractal_tree$tree$X))),
             (max(fractal_tree$tree$X) + 0.1*abs(max(fractal_tree$tree$X))))
@@ -574,7 +572,7 @@ growing_tree <- function(fractal_tree){
   path <- fs::path("growing_trees")
   suppressMessages(usethis::use_directory(path))
   
-  for(i in 1:max(frames)){
+  for(i in 1:(max(frames)+10)){
     name <- rename(i)
     
     tree <- fractal_tree$tree[which(fractal_tree$tree$grow_index < i+1),]
@@ -599,5 +597,6 @@ growing_tree <- function(fractal_tree){
   
   rm(tree, grow_index, frames, xlim, ylim)
   
-  return(noquote(paste("GIF file saved as ", filename, " in folder 'growing_trees'.", sep = "")))
+  noquote(paste("GIF file saved as ", filename, " in folder 'growing_trees'.", sep = ""))
+  if(return_filename) return(filename)
 }

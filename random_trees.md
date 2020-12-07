@@ -9,18 +9,18 @@ matter further down after some testing and demonstrations.
 devtools::load_all()
 ```
 
-### Input arguments not in “deterministic\_trees”
+### Input arguments not in “deterministic\_tree”
 
 <b>random\_angles</b> : (lgl) Toggles angle noise on/off. <br>
 <b>angle\_variance</b> : (dbl) Indicates base variance for angle noise.
-By default “set” to zero be given value later. <b>random\_lengths</b> :
-(lgl) Toggles length noise on/off. <br> <b>length\_variance</b> : (dbl)
-Indicates base variance for length noise. By default “set” to zero be
-given value later.
+By default “set” to zero be given value later.<br>
+<b>random\_lengths</b> : (lgl) Toggles length noise on/off. <br>
+<b>length\_variance</b> : (dbl) Indicates base variance for length
+noise. By default “set” to zero be given value later.
 
 ## Exploring effects of “random\_angles = T” and “random\_lengths” with default variance values
 
-### Default values
+#### Default values
 
 <b>angle\_variance \<- (angles\[2\]/(children\[1\]+1))^2</b> <br>
 <b>length\_variance \<- lengths\[1\]/24</b> <br>
@@ -36,46 +36,49 @@ rls <- c(rep(F,8),rep(T,8))
 ``` r
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
-  random_trees(random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+  random_tree(random_angles = ras[i], random_lengths = rls[i], title = titles[i])
 }
 ```
 
-![](random_trees_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+<img src="random_trees_files/figure-gfm/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
 
 ### splits = 8, children = 2, angle = pi/4, scale\_angle = F, length\_scale = 1.4
 
 ``` r
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
-  random_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+  random_tree(splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
 }
 ```
 
-![](random_trees_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+<img src="random_trees_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
 
 ### splits = 5, children = 3, angle = pi/6, length\_scale = 1.4
 
 ``` r
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
-  random_trees(splits = 5, children = 3, angle = pi/6, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+  random_tree(splits = 5, children = 3, angle = pi/6, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
 }
 ```
 
-![](random_trees_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+<img src="random_trees_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
 ### splits = 6, trunk\_scale = 0.75, angle\_scale = 1.25, sib\_ratio = c(1,3,1)
 
 ``` r
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
-  random_trees(splits = 6, trunk_scale = 0.5, angle_scale = 1.25, sib_lgth_ratio = c(1,3,1), random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+  random_tree(splits = 6, trunk_scale = 0.5, angle_scale = 1.25, sib_lgth_ratio = c(1,3,1), random_angles = ras[i], random_lengths = rls[i], title = titles[i])
 }
 ```
 
-![](random_trees_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+<img src="random_trees_files/figure-gfm/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
 
-## The old “random\_trees()”
+Added randomization is clearly better suited for some inputs than
+others.
+
+## The old “random\_tree()”
 
 ``` r
 random_trees_old <- function(splits = 3, 
@@ -385,11 +388,11 @@ system.time(random_trees_old(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, 
     ## when loading 'dplyr'
 
     ##    user  system elapsed 
-    ##   0.748   0.160   0.908
+    ##   0.996   0.168   1.165
 
 ``` r
-system.time(random_trees(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, random_angles = T, random_lengths = T, sib_lgth_ratio = c(1,4,1), taper = T, plot = F))
+system.time(random_tree(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, random_angles = T, random_lengths = T, sib_lgth_ratio = c(1,4,1), taper = T, plot = F))
 ```
 
     ##    user  system elapsed 
-    ##   0.092   0.000   0.092
+    ##   0.096   0.000   0.096

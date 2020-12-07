@@ -8,33 +8,43 @@ Using animation guidance from:
 devtools::load_all()
 ```
 
-    ## Loading swankydoodledandy-project-randomtrees
-
-    ## Invalid DESCRIPTION:
-    ## Malformed package name
-    ## 
-    ## See section 'The DESCRIPTION file' in the 'Writing R Extensions'
-    ## manual.
+To use any of the animation functions you first need to save the output
+of a generated tree by setting the argument <b>datadump = T</b> during
+tree production. You do not have to set <b>plot = F</b>.
 
 ``` r
-fractal_tree <- random_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, random_angles = T, 
-                                              random_lengths = T, length_scale = 1.4, plot = F, datadump = T)
+fractal_tree <- random_tree(splits = 9, children = 2, angle = pi/4, scale_angle = T, random_angles = T, sib_lgth_ratio = c(1.5,1),
+                            sib_thk_ratio = c(1,1.5), random_lengths = T, angle_scale = 1.05, length_scale = 1.35, plot = T, datadump = T)
 ```
 
-# Swaying Tree
+<img src="animated_tree_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+
+## Swaying Tree
 
 Generates a random field to create a GIF animation of a tree “swaying”
 in the wind.
 
-``` r
-swaying_tree(fractal_tree, var = 0.02, scale = 0.4)
-```
+#### Input arguments
 
-    ## [1] GIF file saved as swaying_tree_2020-12-07_00:22:06_PST.gif in folder 'swaying_trees'.
+<b>fractal\_tree</b> : The output of <b>random\_trees()</b> or
+<b>deterministic\_tree()</b> when <b>datadump = T</b>.<br> <b>var</b> :
+(dbl) Indicates variance of the random field. Larger <b>var</b> =\>
+stronger “wind”.<br> <b>scale</b> : (dbl) Indicated timescale of wind
+patterns. Smaller <b>scale</b> =\> faster wind direction changes.<br>
+<b>return\_filename</b> : (lgl) Indicated if the file name of the
+generated GIF should be returned.
+
+``` r
+filename <- swaying_tree(fractal_tree, var = 0.02, scale = 0.4, return_filename = T)
+```
 
 Example:
 
-<img src="swaying_trees/swaying_tree_2020-12-07_00:19:57_PST.gif">
+<center>
+
+<img src="swaying_trees/swaying_tree_2020-12-07_04:11:56_PST.gif">
+
+</center>
 
 The object used to generate the “wind” is calculated in the manner
 below.
@@ -49,18 +59,24 @@ simu <- suppressMessages(as.matrix(RandomFields::RFsimulate(model, x, y, grid=TR
 raster::plot(raster::raster(simu))
 ```
 
-![](animated_tree_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+<img src="animated_tree_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
 
-# Growing Tree
+## Growing Tree
 
-Produces a GIF animation of a “growing” tree
+Produces a GIF animation of a “growing” tree. The only input is the
+<b>datadump</b> output of one the tree generating functions and the
+argument indicating whether the filename should be returned. Produces
+ten frames per tree level, including level of starter branch/trunk, plus
+ten more frames for the final image.
 
 ``` r
-growing_tree(fractal_tree)
+filename <- growing_tree(fractal_tree, return_filename = T)
 ```
-
-    ## [1] GIF file saved as growing_tree_2020-12-07_00:22:08_PST.gif in folder 'growing_trees'.
 
 Example:
 
-<img src="growing_trees/growing_tree_2020-12-07_00:11:37_PST.gif">
+<center>
+
+<img src="growing_trees/growing_tree_2020-12-07_04:12:01_PST.gif">
+
+</center>
