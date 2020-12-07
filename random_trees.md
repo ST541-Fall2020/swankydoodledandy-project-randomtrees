@@ -3,7 +3,7 @@ Random Trees
 
 The first iteration is labelled here as “random\_trees\_old”.
 Vectorization has resulted in a much faster function. A comparison is
-matter further down after some testing and demonstrations.
+made further down after some testing and demonstrations.
 
 ``` r
 devtools::load_all()
@@ -18,7 +18,7 @@ By default “set” to zero be given value later.<br>
 <b>length\_variance</b> : (dbl) Indicates base variance for length
 noise. By default “set” to zero be given value later.
 
-## Exploring effects of “random\_angles = T” and “random\_lengths” with default variance values
+### Exploring effects of “random\_angles = T” and “random\_lengths = T” with default variance values
 
 #### Default values
 
@@ -388,11 +388,11 @@ system.time(random_trees_old(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, 
     ## when loading 'dplyr'
 
     ##    user  system elapsed 
-    ##   0.996   0.168   1.165
+    ##   0.749   0.176   0.929
 
 ``` r
 system.time(random_tree(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, random_angles = T, random_lengths = T, sib_lgth_ratio = c(1,4,1), taper = T, plot = F))
 ```
 
     ##    user  system elapsed 
-    ##   0.096   0.000   0.096
+    ##   0.092   0.000   0.093

@@ -3,7 +3,7 @@ title: Random Trees
 output: github_document
 ---
 
-The first iteration is labelled here as "random_trees_old". Vectorization has resulted in a much faster function. A comparison is matter further down after some testing and demonstrations.
+The first iteration is labelled here as "random_trees_old". Vectorization has resulted in a much faster function. A comparison is made further down after some testing and demonstrations.
 
 ```{r, message = F, warning = F}
 devtools::load_all()
@@ -16,7 +16,7 @@ devtools::load_all()
 <b>random_lengths</b>                : (lgl) Toggles length noise on/off. <br>
 <b>length_variance</b>               : (dbl) Indicates base variance for length noise. By default "set" to zero be given value later.
 
-## Exploring effects of "random_angles = T" and "random_lengths" with default variance values
+### Exploring effects of "random_angles = T" and "random_lengths = T" with default variance values
 
 #### Default values
 
