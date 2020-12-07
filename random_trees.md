@@ -1,9 +1,15 @@
 Random Trees
 ================
 
-# Adding randomness to basic\_deterministic\_trees()
+The first iteration is labelled here as “random\_trees\_old”.
+Vectorization has resulted in a much faster function. A comparison is
+matter further down after some testing and demonstrations.
 
-### New input arguments
+``` r
+devtools::load_all()
+```
+
+### Input arguments not in “deterministic\_trees”
 
 <b>random\_angles</b> : (lgl) Toggles angle noise on/off. <br>
 <b>angle\_variance</b> : (dbl) Indicates base variance for angle noise.
@@ -12,8 +18,67 @@ By default “set” to zero be given value later. <b>random\_lengths</b> :
 Indicates base variance for length noise. By default “set” to zero be
 given value later.
 
+## Exploring effects of “random\_angles = T” and “random\_lengths” with default variance values
+
+### Default values
+
+<b>angle\_variance \<- (angles\[2\]/(children\[1\]+1))^2</b> <br>
+<b>length\_variance \<- lengths\[1\]/24</b> <br>
+
 ``` r
-random_trees <- function(splits = 3, 
+titles <- rep(c("both = F", "random_angles = T", "random_lengths = T", "both = T"), each = 4)
+ras <- rep(c(F,F,F,F,T,T,T,T), 2)
+rls <- c(rep(F,8),rep(T,8))
+```
+
+### Default tree
+
+``` r
+par(mfrow=c(4,4), mar=c(1,1,1,1))
+for(i in 1:16){
+  random_trees(random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+}
+```
+
+![](random_trees_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+### splits = 8, children = 2, angle = pi/4, scale\_angle = F, length\_scale = 1.4
+
+``` r
+par(mfrow=c(4,4), mar=c(1,1,1,1))
+for(i in 1:16){
+  random_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+}
+```
+
+![](random_trees_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+### splits = 5, children = 3, angle = pi/6, length\_scale = 1.4
+
+``` r
+par(mfrow=c(4,4), mar=c(1,1,1,1))
+for(i in 1:16){
+  random_trees(splits = 5, children = 3, angle = pi/6, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+}
+```
+
+![](random_trees_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+### splits = 6, trunk\_scale = 0.75, angle\_scale = 1.25, sib\_ratio = c(1,3,1)
+
+``` r
+par(mfrow=c(4,4), mar=c(1,1,1,1))
+for(i in 1:16){
+  random_trees(splits = 6, trunk_scale = 0.5, angle_scale = 1.25, sib_lgth_ratio = c(1,3,1), random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+}
+```
+
+![](random_trees_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+## The old “random\_trees()”
+
+``` r
+random_trees_old <- function(splits = 3, 
                          length = 2,
                          scale_length = T,
                          length_scale = 1.4,
@@ -116,13 +181,13 @@ random_trees <- function(splits = 3,
   # Get the total angle for each branch, including starting branch
   angles <- c(rep(angles[1], prod(children)), 
               unlist(purrr::map(1:splits,
-                                ~ rep(rep(angles[.+1]*((-(children[.]-1)/2):((children[.]-1)/2)), 
+                                ~ rep(rep(angles[.+1]*(((children[.]-1)/2):(-(children[.]-1)/2)), 
                                           each = prod(children[-(1:.)])), 
                                       times = if(.==1){1}else{prod(children[1:(.-1)])}))))
-  angles_matrix <- matrix(angles, ncol = splits + 1)
+  angle_matrix <- matrix(angles, ncol = splits + 1)
   angles <- c(start_angle, 
               unlist(purrr::map(1:splits, ~ 
-                                  angles_matrix[seq(1,prod(children),prod(children[-(1:.)])),1:(.+1)] 
+                                  angle_matrix[seq(1,prod(children),prod(children[-(1:.)])),1:(.+1)] 
                                 %*% rep(1,.+1))))
   # Add randomness for angles if applicable
   if(random_angles){
@@ -161,7 +226,7 @@ random_trees <- function(splits = 3,
   Z_coords <- matrix(unlist(purrr::map(1:(splits+1), 
                                        ~ rep(Zs[,.], times = if(.==1){1}else{prod(children[1:(.-1)])}))), 
                      ncol = length(angles))
-  
+  X_coords <- matrix(rep(0, 100*sum(c(1,cumprod(children)))), nrow = 100)
   # If "sib_ratio" selected, rescales lengths
   if(length(sib_ratio)>1){
     sib_ratio <- sib_ratio/max(sib_ratio)
@@ -215,14 +280,14 @@ random_trees <- function(splits = 3,
                                     ~ paste(c("b_1", matrix(t(family[[levels[-1][.]+1]])[,-1], 
                                                             nrow = gensize[levels[.+1]])[gen_index[.,1], 1:gen_index[.,2]]), collapse = "_"))))
   # Stack coordinates
-  X_coords <- unlist(purrr::map(1:ncol(X_coords), ~ if(.==1){X_coords[,.]}
-                                else{X_coords[,.]<-X_coords[,.]+
-                                  sum(X_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == ., 
-                                                                                arr.ind = T)[2]][-(levels[.]+1)]])}))
-  Z_coords <- unlist(purrr::map(1:ncol(Z_coords), ~ if(.==1){Z_coords[,.]}
-                                else{Z_coords[,.]<-Z_coords[,.]+
-                                  sum(Z_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == .,
-                                                                                arr.ind = T)[2]][-(levels[.]+1)]])}))
+  X_coords_stacked <- unlist(purrr::map(1:ncol(X_coords), ~ if(.==1){X_coords[,.]}
+                                        else{X_coords[,.]<-X_coords[,.]+
+                                          sum(X_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == ., 
+                                                                                        arr.ind = T)[2]][-(levels[.]+1)]])}))
+  Z_coords_stacked <- unlist(purrr::map(1:ncol(Z_coords), ~ if(.==1){Z_coords[,.]}
+                                        else{Z_coords[,.]<-Z_coords[,.]+
+                                          sum(Z_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == .,
+                                                                                        arr.ind = T)[2]][-(levels[.]+1)]])}))
   # Get thickness information
   if(man_split_thickness & taper){ # Tapers manual thicknesses to match at splits
     thicknesses <- c(man_begin_thick,
@@ -257,13 +322,15 @@ random_trees <- function(splits = 3,
                         start_angle = start_angle,
                         angle = angle,
                         angles = angles,
-                        angles_matrix = angles_matrix,
+                        angle_matrix = angle_matrix,
                         scale_angle = scale_angle,
-                        angle_scale = angle_scale)
+                        angle_scale = angle_scale,
+                        unstacked_X_coords = X_coords,
+                        unstacked_Z_coords = Z_coords)
   
   # Create tree tibble
-  tree <- tibble::tibble(X = X_coords,
-                         Z = Z_coords,
+  tree <- tibble::tibble(X = X_coords_stacked,
+                         Z = Z_coords_stacked,
                          thickness = thickness_per_point)
   
   branch_info <- tibble::tibble(branch = 1:length(angles),
@@ -271,6 +338,7 @@ random_trees <- function(splits = 3,
                                 parents_path_name = names2,
                                 generation_size = rep(c(1,cumprod(children)), c(1,cumprod(children))),
                                 level = levels,
+                                
                                 length = lengths,
                                 length_noise = c(0, length_noise),
                                 angle_rad = angles,
@@ -294,7 +362,6 @@ random_trees <- function(splits = 3,
                       branch_info = branch_info,
                       plot_info = plotinfo)
   
-  
   if(plot) {
     par(mar=c(1,1,1,1))
     plot(x = tree$X, y = tree$Z,
@@ -308,63 +375,21 @@ random_trees <- function(splits = 3,
 }
 ```
 
-# Exploring effects of “random\_angles = T” and “random\_lengths” with default “angle\_variance”
-
-### Default values
-
-<b>angle\_variance \<- (angles\[2\]/4)^2</b> : angle of first split
-divide by 4 and squared <br> <b>length\_variance \<- lengths\[1\]/24</b>
-: length of the starting branch divide by 24 <br>
+### Comparing timing between old and new
 
 ``` r
-titles <- rep(c("both = F", "random_angles = T", "random_lengths = T", "both = T"), each = 4)
-ras <- rep(c(F,F,F,F,T,T,T,T), 2)
-rls <- c(rep(F,8),rep(T,8))
-```
-
-### Default tree
-
-``` r
-par(mfrow=c(4,4), mar=c(1,1,1,1))
-for(i in 1:16){
-  random_trees(random_angles = ras[i], random_lengths = rls[i], title = titles[i])
-}
+system.time(random_trees_old(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, random_angles = T, random_lengths = T, sib_ratio = c(1,4,1), taper = T, plot = F))
 ```
 
     ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
     ## when loading 'dplyr'
 
-![](random_trees_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
-
-### splits = 8, children = 2, angle = pi/4, scale\_angle = F, length\_scale = 1.4
-
-``` r
-par(mfrow=c(4,4), mar=c(1,1,1,1))
-for(i in 1:16){
-  random_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
-}
-```
-
-![](random_trees_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
-
-### splits = 5, children = 3, angle = pi/6, length\_scale = 1.4
+    ##    user  system elapsed 
+    ##   0.748   0.160   0.908
 
 ``` r
-par(mfrow=c(4,4), mar=c(1,1,1,1))
-for(i in 1:16){
-  random_trees(splits = 5, children = 3, angle = pi/6, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
-}
+system.time(random_trees(splits = 6, trunk_scale = 0.3, angle_scale = 1.25, random_angles = T, random_lengths = T, sib_lgth_ratio = c(1,4,1), taper = T, plot = F))
 ```
 
-![](random_trees_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-### splits = 6, trunk\_scale = 0.75, angle\_scale = 1.25, sib\_ratio = c(1,3,1)
-
-``` r
-par(mfrow=c(4,4), mar=c(1,1,1,1))
-for(i in 1:16){
-  random_trees(splits = 6, trunk_scale = 0.5, angle_scale = 1.25, sib_ratio = c(1,3,1), random_angles = ras[i], random_lengths = rls[i], title = titles[i])
-}
-```
-
-![](random_trees_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+    ##    user  system elapsed 
+    ##   0.092   0.000   0.092

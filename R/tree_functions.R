@@ -2,278 +2,6 @@
 #
 #
 #
-# Basic Deterministic Trees
-#
-basic_deterministic_trees <- function(splits = 3, 
-                                      length = 2,
-                                      scale_length = T,
-                                      length_scale = 1.4,
-                                      trunk_scale = 1,
-                                      children = 2,
-                                      start_angle = 0,
-                                      angle = pi/(splits/2 + 1),
-                                      scale_angle = T,
-                                      angle_scale = sqrt(1.272018),
-                                      thickness = 2,
-                                      scale_thickness = T,
-                                      thickness_scale = 1.61803,
-                                      taper = T,
-                                      man_lengths = 0,
-                                      man_angles = 0,
-                                      man_split_thickness = 0,
-                                      man_begin_thick = 0,
-                                      man_end_thick = 0,
-                                      man_children = 0,
-                                      sib_ratio = 0,
-                                      title = NA,
-                                      plot = T,
-                                      datadump = F){
-  
-  if(typeof(splits) != "double" || splits %% 1 != 0 || splits <= 0){
-    return("error: splits must be a positive integer")
-  }
-  if(!any(c(0,1,F,T,FALSE,TRUE) == scale_length)){
-    return("error: scale_length should be given a logical value")
-  }
-  if(!any(c(0,1,F,T,FALSE,TRUE) == scale_angle)){
-    return("error: scale_angle should be given a logical value")
-  }
-  if(!any(c(0,1,F,T,FALSE,TRUE) == taper)){
-    return("error: taper should be given a logical value")
-  }
-  if(!any(c(0,1,F,T,FALSE,TRUE) == scale_thickness)){
-    return("error: scale_thickness should be given a logical value")
-  }
-  
-  inputs = list(splits = splits,
-                length = length,
-                scale_length = scale_length,
-                length_scale = length_scale,
-                trunk_scale = trunk_scale,
-                children = children,
-                start_angle = start_angle,
-                angle = angle,
-                scale_angle = scale_angle,
-                angle_scale = angle_scale,
-                thickness = thickness,
-                scale_thickness = scale_thickness,
-                thickness_scale = thickness_scale,
-                taper = taper,
-                man_lengths = man_lengths,
-                man_split_thickness = man_split_thickness,
-                man_begin_thick = man_begin_thick,
-                man_end_thick = man_end_thick,
-                man_children = man_children,
-                sib_ratio = sib_ratio,
-                title = title,
-                plot = plot,
-                datadump = datadump)
-  
-  # Get information on number of splits at each level
-  if(any(as.logical(man_children))){ # Uses manually selected common children amounts at each split
-    if(length(man_children) != splits){
-      splits <- length(man_children)
-    }
-    children <- man_children[1:splits]
-  }
-  else if(any(as.logical(sib_ratio))){ # Uses manually selected common children amounts at each split
-    children <- rep(length(sib_ratio), splits)
-  }
-  else{ # All splits have same number of children
-    children <- rep(children, splits)
-  }
-  if(any(children %% 1 != 0 || children <= 0 || typeof(children) != "double")){
-    paste("error: input for children/man_children/sib_ratio should be an integer/vector of integers.")
-  }
-  
-  # Get branch angle information
-  if(man_angles){ # Uses manually selected angles between branches for each split level
-    angles <- man_angles
-    scale_angle <- F # Manual angles not scaleable within current scope
-  } else if(scale_angle){ # Iteratively scales selected angle by constant factor at each split
-    angles <- c(start_angle, purrr::map_dbl(1:splits, ~ angle/angle_scale^(. - 1)))
-  } else{ # Uses constant angle between branches at splits
-    angles <- c(start_angle, rep(angle, splits))
-  }
-  # Get the total angle for each branch, including starting branch
-  angles <- c(rep(angles[1], prod(children)), 
-              unlist(purrr::map(1:splits,
-                                ~ rep(rep(angles[.+1]*((-(children[.]-1)/2):((children[.]-1)/2)), 
-                                          each = prod(children[-(1:.)])), 
-                                      times = if(.==1){1}else{prod(children[1:(.-1)])}))))
-  angles_matrix <- matrix(angles, ncol = splits + 1)
-  angles <- c(start_angle, 
-              unlist(purrr::map(1:splits, ~ 
-                                  angles_matrix[seq(1,prod(children),prod(children[-(1:.)])),1:(.+1)] 
-                                %*% rep(1,.+1))))
-  # Get branch length information and make table of starting lines
-  X <- rep(0, 100)
-  if(man_lengths){
-    lengths <- man_lengths
-    scale_length <- F # Manual lengths not scaleable within current scope
-    Zs <- suppressMessages(purrr::map_dfc(lengths, ~ seq(0, ., length.out=100)))
-    Zs <- purrr::set_names(Zs, purrr::map_chr(0:splits, ~ paste(.)))
-  }
-  if(scale_length){
-    if(length(length_scale) < splits){
-      length_scale <- rep(length_scale, splits)
-    }
-    lengths <- purrr::map_dbl(1:(splits+1), ~ length/prod(c(1,length_scale)[1:.]))
-    lengths <- lengths %*% diag(c(trunk_scale,rep(1,splits)))
-    Zs <- suppressMessages(purrr::map_dfc(lengths, ~ seq(0, ., length.out=100)))
-    Zs <- purrr::set_names(Zs, purrr::map_chr(0:splits, ~ paste(.)))
-  } else{
-    lengths <- rep(length, splits+1)
-    lengths <- lengths %*% diag(c(trunk_scale,rep(1,splits)))
-    Zs <- suppressMessages(purrr::map_dfc(lengths, ~ seq(0, 1, length.out=100))) 
-    Zs <- purrr::set_names(Zs, purrr::map_chr(0:splits, ~ paste(.)))
-  }
-  
-  # Make matrices of unrotated/unstacked coordinates
-  Z_coords <- matrix(unlist(purrr::map(1:(splits+1), 
-                                       ~ rep(Zs[,.], times = if(.==1){1}else{prod(children[1:(.-1)])}))), 
-                     ncol = length(angles))
-  # If "sib_ratio" selected, rescales lengths
-  if(length(sib_ratio)>1){
-    sib_ratio <- sib_ratio/max(sib_ratio)
-    sib_ratio <- c(1, rep(sib_ratio, sum(cumprod(c(1,children[-1])))))
-    Z_coords <- Z_coords %*% diag(sib_ratio)
-  } else {
-    sib_ratio <- rep(1, sum(c(1,cumprod(children))))
-  }
-  # Rotate coordinates
-  X_coords <- - Z_coords %*% diag(sin(angles))
-  Z_coords <- Z_coords %*% diag(cos(angles))
-  # Make branch address matrix
-  levels <- rep(0:splits, times = c(1,cumprod(children)))
-  gensize <- cumprod(children)
-  gen_index <- cbind(unlist(purrr::map(1:length(gensize), ~1:gensize[.])), 
-                     c(rep(1:splits, times = cumprod(children))))
-  
-  family <- rbind(rep(1,prod(children)),
-                  do.call(rbind, purrr::map(1:splits, ~ rep((cumsum(c(1,gensize))[.]+1):(cumsum(c(1,gensize))[.+1]), 
-                                                            each = prod(children[-(1:.)])))))
-  family <- purrr::map(1:(splits+1), ~ matrix(family[1:.,seq(1,prod(children),
-                                                             by=if(.==(splits+1)){1}else{prod(children[.:splits])})],
-                                              ncol = c(1,gensize)[.]))
-  
-  paths <- unlist(purrr::map(1:splits, ~ rep(rep(1:children[.], each = prod(children[-(1:.)])), 
-                                             times = if(.==1){1}else{prod(children[1:(.-1)])})))
-  paths <- matrix(paths, ncol = splits)
-  paths <- purrr::map(1:splits, 
-                      ~ matrix(paths[seq(1,prod(children),by=if(.==splits){1}else{prod(children[(.+1):splits])}),1:.],
-                               nrow = gensize[.]))
-  # Branch naming
-  # names1 favors relative sibling information at each split
-  names1 <- c("b1_0", purrr::map_chr(1:length(levels[-1]), 
-                                     ~ paste(c("b",.+1,"_0", paths[[levels[-1][.]]][gen_index[.,1], 1:gen_index[.,2]]), collapse = "")))
-  # names2 favors parent information
-  names2 <- c("b_1", purrr::map_chr(1:length(levels[-1]), 
-                                    ~ paste(c("b_1", matrix(t(family[[levels[-1][.]+1]])[,-1], 
-                                                            nrow = gensize[levels[.+1]])[gen_index[.,1], 1:gen_index[.,2]]), collapse = "_")))
-  # Stack coordinates
-  X_coords <- unlist(purrr::map(1:ncol(X_coords), ~ if(.==1){X_coords[,.]}
-                                else{X_coords[,.]<-X_coords[,.]+
-                                  sum(X_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == ., 
-                                                                                arr.ind = T)[2]][-(levels[.]+1)]])}))
-  Z_coords <- unlist(purrr::map(1:ncol(Z_coords), ~ if(.==1){Z_coords[,.]}
-                                else{Z_coords[,.]<-Z_coords[,.]+
-                                  sum(Z_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == .,
-                                                                                arr.ind = T)[2]][-(levels[.]+1)]])}))
-  # Get thickness information
-  if(man_split_thickness & taper){ # Tapers manual thicknesses to match at splits
-    thicknesses <- c(man_begin_thick,
-                     man_split_thickness,
-                     man_end_thick)
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else if(man_split_thickness){ # Does not taper thicknesses to match at splits
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ rep(thicknesses[.], 100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else if(!taper & scale_thickness){ # Decreases from chosen starting thickness by constant scaling factor at each split
-    thicknesses <- purrr::map_dbl(0:(splits+1), ~ thickness/thickness_scale^(.))
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ rep(thicknesses[.], each = 100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else if(taper & scale_thickness){ # Tapers from chosen starting thickness by constant scaling factor at each split
-    thicknesses <- purrr::map_dbl(0:(splits+1), ~ thickness/thickness_scale^(.))
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else{ # Uses chosen starting thickness throughout
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ rep(thickness, 100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  }
-  # Create of vectors of thicknesses to pair with vectors of coordinates
-  thickness_per_point <- unlist(purrr::map(1:(splits+1), 
-                                           ~ rep(ts[,.], times = if(.==1){1}else{prod(children[1:(.-1)])})))
-  # Collect variables made by function
-  fun_variables <- list(splits = splits,
-                        length = length,
-                        scale_length = scale_length,
-                        length_scale = length_scale,
-                        children = children,
-                        start_angle = start_angle,
-                        angle = angle,
-                        angles = angles,
-                        angles_matrix = angles_matrix,
-                        scale_angle = scale_angle,
-                        angle_scale = angle_scale)
-  
-  # Create tree tibble
-  tree <- tibble::tibble(X = X_coords,
-                         Z = Z_coords,
-                         thickness = thickness_per_point)
-  
-  branch_info <- tibble::tibble(branch = 1:length(angles),
-                                sibling_path_name = names1,
-                                parents_path_name = names2,
-                                generation_size = rep(c(1,cumprod(children)), c(1,cumprod(children))),
-                                level = levels,
-                                length = rep(lengths, times =  c(1,cumprod(children))) %*% diag(sib_ratio),
-                                angle_rad = angles,
-                                angle_deg = angles*360/(2*pi),
-                                start_thickness = thickness_per_point[seq(1,(length(angles)*100), by = 100)],
-                                end_thickness = thickness_per_point[seq(100,(length(angles)*100), by = 100)])
-  
-  
-  
-  plotinfo <- list(x = tree$X, y = tree$Z,
-                   pch = 16, cex = tree$thickness,
-                   xaxt = "n", yaxt = "n", asp = 1,
-                   main = deparse(title),
-                   xlab = NA, ylab = NA)
-  
-  deterministic_tree <- list(inputs = inputs,
-                             fun_variables = fun_variables,
-                             tree = tree,
-                             branch_info = branch_info,
-                             plot_info = plotinfo)
-  
-  
-  if(plot) {
-    par(mar=c(1,1,1,1))
-    plot(x = tree$X, y = tree$Z,
-         pch = 16,cex = tree$thickness,
-         xaxt = "n", yaxt = "n", asp = 1,
-         main = title,
-         xlab = NA, ylab = NA)
-  }
-  
-  if(datadump) return(deterministic_tree)
-}
-#
-#
-#
-#
-#####################################################################################################################
-#####################################################################################################################
-#####################################################################################################################
-#####################################################################################################################
-#####################################################################################################################
-#####################################################################################################################
-#
-#
-#
-#
 # Random Trees
 #
 random_trees <- function(splits = 3, 
@@ -296,7 +24,8 @@ random_trees <- function(splits = 3,
                          man_begin_thick = 0,
                          man_end_thick = 0,
                          man_children = 0,
-                         sib_ratio = 0,
+                         sib_lgth_ratio = 0,
+                         sib_thk_ratio = 0,
                          title = NA,
                          plot = T,
                          datadump = F,
@@ -341,7 +70,8 @@ random_trees <- function(splits = 3,
                 man_begin_thick = man_begin_thick,
                 man_end_thick = man_end_thick,
                 man_children = man_children,
-                sib_ratio = sib_ratio,
+                sib_lgth_ratio = sib_lgth_ratio,
+                sib_thk_ratio = sib_thk_ratio,
                 title = title,
                 plot = plot,
                 datadump = datadump,
@@ -350,15 +80,18 @@ random_trees <- function(splits = 3,
                 random_lengths = random_lengths,
                 length_variance = length_variance)
   
-  # Get information on number of splits at each level
+  # Get information on number of children at each split
   if(any(as.logical(man_children))){ # Uses manually selected common children amounts at each split
     if(length(man_children) != splits){
       splits <- length(man_children)
     }
     children <- man_children[1:splits]
   }
-  else if(any(as.logical(sib_ratio))){ # Uses manually selected common children amounts at each split
-    children <- rep(length(sib_ratio), splits)
+  else if(any(as.logical(sib_lgth_ratio))){ # Uses length of sib_lgth_ratio to determine children amount
+    children <- rep(length(sib_lgth_ratio), splits)
+  }
+  else if(any(as.logical(sib_thk_ratio))){ # Uses length of sib_thk_ratio to determine children amount
+    children <- rep(length(sib_thk_ratio), splits)
   }
   else{ # All splits have same number of children
     children <- rep(children, splits)
@@ -367,150 +100,168 @@ random_trees <- function(splits = 3,
     paste("error: input for children/man_children/sib_ratio should be an integer/vector of integers.")
   }
   
+  # Get branch, level, and geneology info
+  branch_count <- 1 + sum(cumprod(children))
+  level_gen_size <- c(1,cumprod(children)) # number of branches in a particular level
+  branch_gen_size <- rep(level_gen_size, c(1,cumprod(children))) # number of branches in a level per branch
+  branch_route_count <- rep(rev(level_gen_size), c(1,cumprod(children))) # number of routes containing branch
+  family_tree <- t(matrix(rep(1:sum(level_gen_size), branch_route_count), ncol = splits+1)) # columns indicate branch geneology
+  sibling_history <- rbind(rep(0,prod(children)), 
+                           t(matrix(unlist(lapply(1:splits, function(x) 
+                             rep(rep(1:children[x], each = rev(level_gen_size)[x+1]), 
+                                 level_gen_size[x]))), ncol = splits))) # columns indicate sibling of branch in geneology
+  
   # Get branch angle information
   if(man_angles){ # Uses manually selected angles between branches for each split level
     angles <- man_angles
     scale_angle <- F # Manual angles not scaleable within current scope
   } else if(scale_angle){ # Iteratively scales selected angle by constant factor at each split
-    angles <- c(start_angle, purrr::map_dbl(1:splits, ~ angle/angle_scale^(. - 1)))
+    angles <- c(start_angle, rep(angle, splits)/(angle_scale^(0:(splits-1))))
   } else{ # Uses constant angle between branches at splits
     angles <- c(start_angle, rep(angle, splits))
   }
-  # Get the total angle for each branch, including starting branch
-  angles <- c(rep(angles[1], prod(children)), 
-              unlist(purrr::map(1:splits,
-                                ~ rep(rep(angles[.+1]*((-(children[.]-1)/2):((children[.]-1)/2)), 
-                                          each = prod(children[-(1:.)])), 
-                                      times = if(.==1){1}else{prod(children[1:(.-1)])}))))
-  angles_matrix <- matrix(angles, ncol = splits + 1)
-  angles <- c(start_angle, 
-              unlist(purrr::map(1:splits, ~ 
-                                  angles_matrix[seq(1,prod(children),prod(children[-(1:.)])),1:(.+1)] 
-                                %*% rep(1,.+1))))
+  # Get total branch angles at each angle
+  branch_delta_angle <- unlist(lapply(1:(splits+1), function(x) 
+    rep(angles[x]*(c(1,children)[x]/2-1/2):(-c(1,children)[x]/2+1/2), c(1,level_gen_size)[x])))
+  angle_matrix <- t(apply(matrix(branch_delta_angle[family_tree], nrow = splits+1), 2, cumsum)) 
+  angles <- c(angle_matrix)[cumsum(c(1,branch_route_count[-branch_count]))]
   # Add randomness for angles if applicable
   if(random_angles){
     if(angle_variance == 0){
-      angle_variance <- (angles[2]/4)^2
+      angle_variance <- (angles[2]/(children[1]+1))^2 # Default random angle variance
     }
-    angle_noise <- rnorm(length(angles[-1]), mean = 0, sd = sqrt(angle_variance))
+    angle_noise <- rnorm(branch_count-1, mean = 0, sd = sqrt(angle_variance)) # uses rnorm
     angles <- angles + c(0,angle_noise)
   } else{
-    angle_noise <- rep(0, length(angles[-1]))
+    angle_noise <- rep(0, length(angles[-1])) # indicates no noise for branch table
   }
   
-  # Get branch length information and make table of starting lines
-  X <- rep(0, 100)
+  # Get branch length information
   if(man_lengths){
     lengths <- man_lengths
     scale_length <- F # Manual lengths not scaleable within current scope
-    Zs <- purrr::map_dfc(lengths, ~ seq(0, ., length.out=100))
-    Zs <- purrr::set_names(Zs, purrr::map_chr(0:splits, ~ paste(.)))
-  }
-  if(scale_length){
-    if(length(length_scale) < splits){
-      length_scale <- rep(length_scale, splits)
-    }
-    lengths <- purrr::map_dbl(1:(splits+1), ~ length/prod(c(1,length_scale)[1:.]))
-    lengths <- lengths %*% diag(c(trunk_scale,rep(1,splits)))
-    Zs <- suppressMessages(purrr::map_dfc(lengths, ~ seq(0, ., length.out=100)))
-    Zs <- purrr::set_names(Zs, purrr::map_chr(0:splits, ~ paste(.)))
-  } else{
+  } 
+  else if(scale_length & length(length_scale) < splits){
+    length_scale <- cumprod(c(1,rep(length_scale, splits)))
+    lengths <- rep(length, splits+1)/length_scale
+  } 
+  else if(scale_length & length(length_scale) == splits){
+    length_scale <- c(1,length_scale)
+    lengths <- rep(length, splits+1)/length_scale
+  } 
+  else{ # All branches same length
     lengths <- rep(length, splits+1)
-    lengths <- lengths %*% diag(c(trunk_scale,rep(1,splits)))
-    Zs <- suppressMessages(purrr::map_dfc(lengths, ~ seq(0, 1, length.out=100)))
-    Zs <- purrr::set_names(Zs, purrr::map_chr(0:splits, ~ paste(.)))
-  }
-  # Make matrices of unrotated/unstacked coordinates
-  Z_coords <- matrix(unlist(purrr::map(1:(splits+1), 
-                                       ~ rep(Zs[,.], times = if(.==1){1}else{prod(children[1:(.-1)])}))), 
-                     ncol = length(angles))
-  
-  # If "sib_ratio" selected, rescales lengths
-  if(length(sib_ratio)>1){
-    sib_ratio <- sib_ratio/max(sib_ratio)
-    sib_ratio <- c(1, rep(sib_ratio, sum(cumprod(c(1,children[-1])))))
-    Z_coords <- Z_coords %*% diag(sib_ratio)
-  } else {
-    sib_ratio <- rep(1, sum(c(1,cumprod(children))))
   }
   
-  lengths <- sib_ratio * rep(lengths, times =  c(1,cumprod(children)))
-  # Add randomness for lengths if applicable
+  # If trunk_scale, rescale trunk length
+  if(trunk_scale){
+    lengths <- lengths * c(trunk_scale,rep(1,splits))
+  }
+  
+  # Make lengths for each branch
+  lengths <- rep(lengths, level_gen_size)
+  
+  # Add randomness to lengths if applicable
   if(random_lengths){
     if(length_variance == 0){
-      length_variance <- lengths[1]/24
+      length_variance <- lengths[1]/24 # Default random length variance
     }
-    length_noise <- rnorm(length(angles[-1]), mean = 0, sd = sqrt(length_variance))
-    length_noise <- length_noise/rep(1:splits, cumprod(children))
-    Z_coords <- Z_coords %*% diag(1 + c(0,length_noise)/lengths)
+    length_noise <- rnorm(branch_count-1, mean = 0, sd = sqrt(length_variance)) # uses rnorm
+    length_noise <- c(0, length_noise)/rep(length_scale, level_gen_size) # scales noise same as lengths
+    lengths <- lengths + length_noise
   } else{
-    length_noise <- rep(0, length(angles[-1]))
+    length_noise <- rep(0, branch_count)
+  }
+  # If sib_lgth_ratio given used, rescales lengths
+  if(length(sib_lgth_ratio)>1 & length(unique(children)) == 1){
+    sib_lgth_ratio <- sib_lgth_ratio/max(sib_lgth_ratio)
+    sib_lgth_ratio <- c(1, rep(sib_lgth_ratio, sum(cumprod(c(1,children[-1])))))
+    lengths <- c(diag(sib_lgth_ratio) %*% lengths)
+  } else {
+    sib_lgth_ratio <- rep(1, sum(c(1,cumprod(children))))
   }
   
+  # Make matrix of unrotated/unstacked height coordinates
+  # 100 points per branch and rescale by lengths
+  Z_coords <- matrix(rep(seq(0,1,length.out=100), branch_count), nrow = 100)
+  
+  Z_coords <- Z_coords %*% diag(lengths)
+  
+  
+  # If meander
+  #if(meander == T){
+  #  X_coords <- matrix(c(rep(0,100), na.omit(stats::filter(
+  #    cumsum(rnorm(100*sum(cumprod(children)) + 18, mean = 0, sd = 0.02)), rep(1 / 19, 19), sides = 2))), 
+  #    nrow = 100) %*% diag(rep(1/length_scale, level_gen_size)) # scale meander same as lengths
+  #  X_coords - matrix(rep(X_coords[1,], each = 100), nrow = 100) # return x[1]'s back to zero
+  #} else{
+  #  X_coords <- matrix(rep(0, 100*branch_count), nrow = 100)
+  #}
+  
   # Rotate coordinates
+  #X_coords <- X_coords %*% diag(cos(angles)) - Z_coords %*% diag(sin(angles))
+  #Z_coords <- Z_coords %*% diag(cos(angles)) + X_coords %*% diag(sin(angles))
+  # For some reason adding a matrix of 0's drastically effects outputs
   X_coords <- - Z_coords %*% diag(sin(angles))
   Z_coords <- Z_coords %*% diag(cos(angles))
-  # Make branch address matrix
-  levels <- rep(0:splits, times = c(1,cumprod(children)))
-  gensize <- cumprod(children)
-  gen_index <- cbind(unlist(purrr::map(1:length(gensize), ~1:gensize[.])), 
-                     c(rep(1:splits, times = cumprod(children))))
   
-  family <- rbind(rep(1,prod(children)),
-                  do.call(rbind, purrr::map(1:splits, ~ rep((cumsum(c(1,gensize))[.]+1):(cumsum(c(1,gensize))[.+1]), 
-                                                            each = prod(children[-(1:.)])))))
-  family <- purrr::map(1:(splits+1), ~ matrix(family[1:.,seq(1,prod(children),
-                                                             by=if(.==(splits+1)){1}else{prod(children[.:splits])})],
-                                              ncol = c(1,gensize)[.]))
   
-  paths <- unlist(purrr::map(1:splits, ~ rep(rep(1:children[.], each = prod(children[-(1:.)])), 
-                                             times = if(.==1){1}else{prod(children[1:(.-1)])})))
-  paths <- matrix(paths, ncol = splits)
-  paths <- purrr::map(1:splits, 
-                      ~ matrix(paths[seq(1,prod(children),by=if(.==splits){1}else{prod(children[(.+1):splits])}),1:.],
-                               nrow = gensize[.]))
-  # Branch naming
-  # names1 favors relative sibling information at each split
-  names1 <- c("b1_0", suppressMessages(purrr::map_chr(1:length(levels[-1]), 
-                                                      ~ paste(c("b",.+1,"_0", paths[[levels[-1][.]]][gen_index[.,1], 1:gen_index[.,2]]), collapse = ""))))
-  # names2 favors parent information
-  names2 <- c("b_1", suppressMessages(purrr::map_chr(1:length(levels[-1]), 
-                                                     ~ paste(c("b_1", matrix(t(family[[levels[-1][.]+1]])[,-1], 
-                                                                             nrow = gensize[levels[.+1]])[gen_index[.,1], 1:gen_index[.,2]]), collapse = "_"))))
+  
   # Stack coordinates
-  X_coords_stacked <- unlist(purrr::map(1:ncol(X_coords), ~ if(.==1){X_coords[,.]}
-                                        else{X_coords[,.]<-X_coords[,.]+
-                                          sum(X_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == ., 
-                                                                                        arr.ind = T)[2]][-(levels[.]+1)]])}))
-  Z_coords_stacked <- unlist(purrr::map(1:ncol(Z_coords), ~ if(.==1){Z_coords[,.]}
-                                        else{Z_coords[,.]<-Z_coords[,.]+
-                                          sum(Z_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == .,
-                                                                                        arr.ind = T)[2]][-(levels[.]+1)]])}))
+  branch_delta_X <- rep(c(0, X_coords[100,1:(sum(rev(level_gen_size)[-1]))]),
+                        c(1, rep(children, level_gen_size[-(splits+1)])))
+  X_matrix <- t(apply(matrix(branch_delta_X[family_tree], nrow = splits+1), 2, cumsum))
+  branch_start_X <- c(X_matrix)[cumsum(c(1,branch_route_count[-branch_count]))]
+  X_coords_stacked <- X_coords + matrix(rep(branch_start_X, each = 100), nrow = 100)
+  
+  branch_delta_Z <- rep(c(0, Z_coords[100,1:(sum(rev(level_gen_size)[-1]))]),
+                        c(1, rep(children, level_gen_size[-(splits+1)])))
+  Z_matrix <- t(apply(matrix(branch_delta_Z[family_tree], nrow = splits+1), 2, cumsum))
+  branch_start_Z <- c(Z_matrix)[cumsum(c(1,branch_route_count[-branch_count]))]
+  Z_coords_stacked <- Z_coords + matrix(rep(branch_start_Z, each = 100), nrow = 100)
+  
   # Get thickness information
-  if(man_split_thickness & taper){ # Tapers manual thicknesses to match at splits
+  if(any(as.logical(man_split_thickness)) & taper){ # Tapers manual thicknesses to match at splits
     thicknesses <- c(man_begin_thick,
                      man_split_thickness,
                      man_end_thick)
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else if(man_split_thickness){ # Does not taper thicknesses to match at splits
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ rep(thicknesses[.], 100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else if(!taper & scale_thickness){ # Decreases from chosen starting thickness by constant scaling factor at each split
-    thicknesses <- purrr::map_dbl(0:(splits+1), ~ thickness/thickness_scale^(.))
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ rep(thicknesses[.], each = 100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else if(taper & scale_thickness){ # Tapers from chosen starting thickness by constant scaling factor at each split
-    thicknesses <- purrr::map_dbl(0:(splits+1), ~ thickness/thickness_scale^(.))
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ seq(thicknesses[.], thicknesses[.+1], length.out=100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
-  } else{ # Uses chosen starting thickness throughout
-    ts <- suppressMessages(purrr::map_dfc(1:(splits+1), ~ rep(thickness, 100)))
-    ts <- purrr::set_names(ts, purrr::map_chr(0:splits, ~ paste(.)))
+    ts <- matrix(unlist(lapply(1:(splits+1), function(x)
+      rep(seq(thicknesses[x], thicknesses[x+1], length.out = 100), level_gen_size[x]))), nrow = 100)
+  } else if(any(as.logical(man_split_thickness))){ # Does not taper thicknesses to match at splits
+    thicknesses <- c(man_begin_thick, man_split_thickness)
+    ts <- matrix(rep(thickness, 100*(splits+1)), nrow = 100)
+  } else if(!taper & scale_thickness & length(sib_thk_ratio) == 1){ # Decreases from chosen starting thickness by constant scaling factor at each split
+    thicknesses <- rep(thickness, splits+1)/thickness_scale^(0:splits)
+    ts <- matrix(rep(thicknesses, 100*level_gen_size), nrow = 100)
+  } else if(taper & scale_thickness & length(sib_thk_ratio) == 1){ # Tapers from chosen starting thickness by constant scaling factor at each split
+    thicknesses <- rep(thickness, splits+2)/thickness_scale^(0:(splits+1))
+    ts <- matrix(unlist(lapply(1:(splits+1), function(x)
+      rep(seq(thicknesses[x], thicknesses[x+1], length.out = 100), level_gen_size[x]))), nrow = 100)
+  } else if(!taper & scale_thickness & length(sib_thk_ratio) > 1){
+    sib_thk_ratio <- sib_thk_ratio/min(sib_thk_ratio)
+    scale_thk_split <- thickness_scale*sib_thk_ratio/
+      (1 + thickness_scale*(sib_thk_ratio-1))
+    branch_delta_thk <- c(1, rep(scale_thk_split, sum(cumprod(c(1,children[-splits])))))
+    thickness_matrix <- thickness/t(apply(matrix(branch_delta_thk[family_tree], nrow = splits+1), 2, cumprod))
+    start_thickness <- c(thickness_matrix)[cumsum(c(1,branch_route_count[-branch_count]))]
+    ts <- matrix(rep(start_thickness, each = 100), nrow = 100)
+  }
+  else if(taper & scale_thickness & length(sib_thk_ratio) > 1){
+    sib_thk_ratio <- sib_thk_ratio/min(sib_thk_ratio)
+    scale_thk_split <- thickness_scale*sib_thk_ratio/
+      (1 + thickness_scale*(sib_thk_ratio-1))
+    branch_delta_thk <- c(min(scale_thk_split), rep(scale_thk_split, sum(cumprod(c(1,children[-splits])))))
+    thickness_matrix <- thickness/t(apply(matrix(branch_delta_thk[family_tree], nrow = splits+1), 2, cumprod))
+    end_thickness <- c(thickness_matrix)[cumsum(c(1,branch_route_count[-branch_count]))]
+    start_thickness <- c(rep(thickness, prod(children)), c(thickness_matrix))[cumsum(c(1,branch_route_count[-branch_count]))]
+    ts <- matrix(unlist(lapply(1:branch_count, function(x) seq(start_thickness[x], end_thickness[x], length.out = 100))), nrow = 100)
+  } 
+  else{ # Uses chosen starting thickness throughout
+    ts <- matrix(rep(thickness, 100*branch_count), nrow = 100)
   }
   # Create of vectors of thicknesses to pair with vectors of coordinates
-  thickness_per_point <- unlist(purrr::map(1:(splits+1), 
-                                           ~ rep(ts[,.], times = if(.==1){1}else{prod(children[1:(.-1)])})))
+  thickness_per_point <- c(ts)
+  
   # Collect variables made by function
   fun_variables <- list(splits = splits,
                         length = length,
@@ -520,33 +271,35 @@ random_trees <- function(splits = 3,
                         start_angle = start_angle,
                         angle = angle,
                         angles = angles,
-                        angles_matrix = angles_matrix,
+                        angle_matrix = angle_matrix,
                         scale_angle = scale_angle,
                         angle_scale = angle_scale,
                         unstacked_X_coords = X_coords,
                         unstacked_Z_coords = Z_coords,
-                        family = family,
-                        levels = levels,
-                        paths = paths)
+                        family_tree = family_tree,
+                        sibling_history = sibling_history,
+                        branch_count = branch_count,
+                        branch_route_count = branch_route_count,
+                        level_gen_size = level_gen_size)
+  
   
   # Create tree tibble
-  tree <- tibble::tibble(X = X_coords_stacked,
-                         Z = Z_coords_stacked,
+  tree <- tibble::tibble(X = c(X_coords_stacked),
+                         Z = c(Z_coords_stacked),
                          thickness = thickness_per_point)
   
-  branch_info <- tibble::tibble(branch = 1:length(angles),
-                                sibling_path_name = names1,
-                                parents_path_name = names2,
-                                generation_size = rep(c(1,cumprod(children)), c(1,cumprod(children))),
-                                level = levels,
+  
+  
+  branch_info <- tibble::tibble(branch = 1:branch_count,
+                                generation_size = branch_gen_size,
                                 length = lengths,
-                                length_noise = c(0, length_noise),
+                                length_noise = length_noise,
                                 angle_rad = angles,
                                 angle_noise_rad = c(0,angle_noise),
                                 angle_deg = angles*360/(2*pi),
                                 angle_noise_deg = c(0,angle_noise)*360/(2*pi),
-                                start_thickness = thickness_per_point[seq(1,(length(angles)*100), by = 100)],
-                                end_thickness = thickness_per_point[seq(100,(length(angles)*100), by = 100)])
+                                branch_start_X = branch_start_X,
+                                branch_start_Y = branch_start_Z)
   
   
   
@@ -566,13 +319,88 @@ random_trees <- function(splits = 3,
   if(plot) {
     par(mar=c(1,1,1,1))
     plot(x = tree$X, y = tree$Z,
-         pch = 16,cex = tree$thickness,
+         pch = 16, cex = tree$thickness,
          xaxt = "n", yaxt = "n", asp = 1,
          main = title,
          xlab = NA, ylab = NA)
   }
   
+  
   if(datadump) return(random_tree)
+}
+#
+#
+#
+#
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#
+#
+#
+#
+# Deterministic Trees
+#
+deterministic_tree <- function(splits = 3, 
+                               length = 2,
+                               scale_length = T,
+                               length_scale = 1.4,
+                               trunk_scale = 1,
+                               children = 2,
+                               start_angle = 0,
+                               angle = pi/(splits/2 + 1),
+                               scale_angle = T,
+                               angle_scale = sqrt(1.272018),
+                               thickness = 2,
+                               scale_thickness = T,
+                               thickness_scale = 1.61803,
+                               taper = T,
+                               man_lengths = 0,
+                               man_angles = 0,
+                               man_split_thickness = 0,
+                               man_begin_thick = 0,
+                               man_end_thick = 0,
+                               man_children = 0,
+                               sib_lgth_ratio = 0,
+                               sib_thk_ratio = 0,
+                               title = NA,
+                               plot = T,
+                               datadump = F){
+  
+  # Just called the function random_trees() but turns off randomness
+  
+  random_trees(splits = splits, 
+               length = length,
+               scale_length = scale_length,
+               length_scale = length_scale,
+               trunk_scale = trunk_scale,
+               children = children,
+               start_angle = start_angle,
+               angle = angle,
+               scale_angle = scale_angle,
+               angle_scale = angle_scale,
+               thickness = thickness,
+               scale_thickness = scale_thickness,
+               thickness_scale = thickness_scale,
+               taper = taper,
+               man_lengths = man_lengths,
+               man_angles = man_angles,
+               man_split_thickness = man_split_thickness,
+               man_begin_thick = man_begin_thick,
+               man_end_thick = man_end_thick,
+               man_children = man_children,
+               sib_lgth_ratio = sib_lgth_ratio,
+               sib_thk_ratio = sib_thk_ratio,
+               title = title,
+               plot = plot,
+               datadump = datadump,
+               random_angles = F,
+               angle_variance = 0,
+               random_lengths = F,
+               length_variance = 0)
 }
 #
 #
@@ -618,50 +446,39 @@ plot_tree <- function(fractal_tree, xlim = NULL, ylim = NULL){
 #
 # Swaying Tree
 #
-swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
-  family <- fractal_tree$fun_variables$family
-  levels <- fractal_tree$fun_variables$levels
+growing_tree <- function(fractal_tree){
+  
   xlim <- c((min(fractal_tree$tree$X) - 0.1*abs(min(fractal_tree$tree$X))),
             (max(fractal_tree$tree$X) + 0.1*abs(max(fractal_tree$tree$X))))
   ylim <- c((min(fractal_tree$tree$Z) - 0.1*abs(min(fractal_tree$tree$Z))),
             (max(fractal_tree$tree$Z) + 0.1*abs(max(fractal_tree$tree$Z))))
   
-  model <- RandomFields::RMexp(var = var, scale = scale)
-  branch_count <- sum(cumprod(fractal_tree$fun_variables$children)) + 1
-  x <- seq(0, 10, length.out = 100)
-  y <- seq(0, 10, length.out = branch_count)
-  simu <- suppressMessages(as.matrix(RandomFields::RFsimulate(model, x, y, grid=TRUE)))
+  branch_count <- fractal_tree$fun_variables$branch_count
+  splits <- fractal_tree$fun_variables$splits
+  level_gen_size <- fractal_tree$fun_variables$level_gen_size
+  
+  frames <- t(matrix(1:(5*(splits+1)), nrow = 5))
+  grow_index <- rep(unlist(lapply(1:(splits+1), function(x) rep(frames[x,], level_gen_size[x]))), each = 20)
+  
+  fractal_tree$tree$grow_index <- grow_index
   
   rename <- function(x){
-    return(name <- paste('swaying_trees/00', x,'plot.png', sep=''))
+    return(name <- paste('00', x,'plot.png', sep=''))
   }
   
-  path <- fs::path("swaying_trees")
+  path <- fs::path("growing_trees")
   suppressMessages(usethis::use_directory(path))
   
-  for(i in 0:99){
-    name <- rename(i+1)
-    wind_angles <- simu[i+1,]/
-      rep((fractal_tree$fun_variables$splits+1):1, times = c(1,cumprod(fractal_tree$fun_variables$children)))^1.8
+  for(i in 1:max(frames)){
+    name <- rename(i)
     
-    X_coords <- fractal_tree$fun_variables$unstacked_X_coords %*% diag(cos(c(wind_angles))) - 
-      fractal_tree$fun_variables$unstacked_Z_coords %*% diag(sin(c(wind_angles)))
-    Z_coords <- fractal_tree$fun_variables$unstacked_X_coords %*% diag(sin(c(wind_angles))) +
-      fractal_tree$fun_variables$unstacked_Z_coords %*% diag(cos(c(wind_angles)))
-    
-    X_coords_stacked <- unlist(purrr::map(1:ncol(X_coords), ~ if(.==1){X_coords[,.]}
-                                          else{X_coords[,.]<-X_coords[,.]+
-                                            sum(X_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == ., 
-                                                                                          arr.ind = T)[2]][-(levels[.]+1)]])}))
-    Z_coords_stacked <- unlist(purrr::map(1:ncol(Z_coords), ~ if(.==1){Z_coords[,.]}
-                                          else{Z_coords[,.]<-Z_coords[,.]+
-                                            sum(Z_coords[100,family[[levels[.]+1]][,which(family[[levels[.]+1]] == .,
-                                                                                          arr.ind = T)[2]][-(levels[.]+1)]])}))
+    tree <- fractal_tree$tree[which(fractal_tree$tree$grow_index < i+1),]
     
     png(name)
     par(mar=c(1,1,1,1))
-    plot(x = X_coords_stacked, y = Z_coords_stacked,
-         pch = 16, cex = fractal_tree$tree$thickness,
+    plot(x = tree$X, 
+         y = tree$Z,
+         pch = 16, cex = tree$thickness,
          xaxt = "n", yaxt = "n", asp = 1,
          xlab = NA, ylab = NA,
          xlim = xlim, ylim = ylim)
@@ -670,12 +487,81 @@ swaying_tree <- function(fractal_tree, var = 0.02, scale = 0.4){
   }
   
   #run ImageMagick
-  filename <- paste("swaying_trees/swaying_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
-  system(paste("convert *.png -delay 200x100 -loop 0 ", filename, sep = ""))
-  invisible(file.remove(paste("swaying_trees/",list.files("swaying_trees/",pattern=".png"), sep="")))
+  filename <- paste("growing_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
+  system(paste("convert *.png -delay 200x100 -loop 0 ", "growing_trees/", filename, sep = ""))
+  #invisible(file.remove(list.files(pattern=".png")))
+  invisible(file.remove(list.files(pattern=".png")))
+  
+  rm(tree, grow_index, frames)
+  
+  return(noquote(paste("GIF file saved as ", filename, " in folder 'growing_trees'.", sep = "")))
+}
+#
+#
+#
+#
+#
+#
+#
+#
+###################################################################################
+###################################################################################
+#
+#
+#
+# Growing Tree
+#
+#
+#
+#
+growing_tree <- function(fractal_tree){
+  
+  xlim <- c((min(fractal_tree$tree$X) - 0.1*abs(min(fractal_tree$tree$X))),
+            (max(fractal_tree$tree$X) + 0.1*abs(max(fractal_tree$tree$X))))
+  ylim <- c((min(fractal_tree$tree$Z) - 0.1*abs(min(fractal_tree$tree$Z))),
+            (max(fractal_tree$tree$Z) + 0.1*abs(max(fractal_tree$tree$Z))))
+  
+  branch_count <- fractal_tree$fun_variables$branch_count
+  splits <- fractal_tree$fun_variables$splits
+  level_gen_size <- fractal_tree$fun_variables$level_gen_size
+  
+  frames <- t(matrix(1:(5*(splits+1)), nrow = 5))
+  grow_index <- rep(unlist(lapply(1:(splits+1), function(x) rep(frames[x,], level_gen_size[x]))), each = 20)
+  
+  fractal_tree$tree$grow_index <- grow_index
+  
+  rename <- function(x){
+    return(name <- paste('00', x,'plot.png', sep=''))
+  }
+  
+  path <- fs::path("growing_trees")
+  suppressMessages(usethis::use_directory(path))
+  
+  for(i in 1:max(frames)){
+    name <- rename(i)
+    
+    tree <- fractal_tree$tree[which(fractal_tree$tree$grow_index < i+1),]
+    
+    png(name)
+    par(mar=c(1,1,1,1))
+    plot(x = tree$X, 
+         y = tree$Z,
+         pch = 16, cex = tree$thickness,
+         xaxt = "n", yaxt = "n", asp = 1,
+         xlab = NA, ylab = NA,
+         xlim = xlim, ylim = ylim)
+    
+    dev.off()
+  }
+  
+  #run ImageMagick
+  filename <- paste("growing_tree_", gsub(" ", "_", format(Sys.time(), format = "%F %T %Z")),".gif", sep = "")
+  system(paste("convert *.png -delay 200x100 -loop 0 ", "growing_trees/", filename, sep = ""))
+  #invisible(file.remove(list.files(pattern=".png")))
+  invisible(file.remove(list.files(pattern=".png")))
   
   rm(levels, family, xlim, ylim, X_coords, Z_coords, X_coords_stacked, 
-     Z_coords_stacked, model, branch_count, x, y, simu, name, wind_angles)
+     Z_coords_stacked, model, branch_count, x, y, simu, file_name, name, wind_angles)
   
-  return(noquote(paste("GIF file saved as ", filename, " within folder 'swaying_trees' in current directory.", sep = "")))
+  return(noquote(paste("GIF file saved as ", filename, " in folder 'growing_trees'.", sep = "")))
 }

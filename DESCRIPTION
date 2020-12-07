@@ -14,4 +14,4 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
-usethis: :use_package("purrr", "tibble", "RandomFields", "raster", "here", "use_this")
+usethis: :use_package("tibble", "RandomFields", "raster", "here", "use_this")
