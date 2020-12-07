@@ -55,7 +55,7 @@ title = NA, plot = T, datadump = F)
 <b>man_begin_thick</b>        : Manually select starting thickness by level. 
 <b>man_end_thick</b>          : Manually select ending thickness. 
 <b>man_children</b>           : Manually select number of branches at split by level. 
-<b>sib_ratio</b>              : Only works if equal number of children at each split. Vector indicates 
+<b>sib_lgth_ratio</b>         : Only works if equal number of children at each split. Vector indicates 
                          relative size of children at each split. 
 <br>
 <b>title</b>                  : (chr) Optional title for output tree. 
@@ -67,12 +67,12 @@ title = NA, plot = T, datadump = F)
 
 ``` r
 par(mfrow=c(2,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 1, title = "splits = 1")
-basic_deterministic_trees(splits = 2, title = "splits = 2")
-basic_deterministic_trees(title = "default splits = 3")
-basic_deterministic_trees(splits = 4, title = "splits = 4")
-basic_deterministic_trees(splits = 5, title = "splits = 5")
-basic_deterministic_trees(splits = 6, title = "splits = 6")
+deterministic_tree(splits = 1, title = "splits = 1")
+deterministic_tree(splits = 2, title = "splits = 2")
+deterministic_tree(title = "default splits = 3")
+deterministic_tree(splits = 4, title = "splits = 4")
+deterministic_tree(splits = 5, title = "splits = 5")
+deterministic_tree(splits = 6, title = "splits = 6")
 ```
 
 ![](random_trees_presentation_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
@@ -81,21 +81,21 @@ basic_deterministic_trees(splits = 6, title = "splits = 6")
 
 ``` r
 par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(children = 1, title = "children = 1")
-basic_deterministic_trees(title = "default children = 2")
-basic_deterministic_trees(children = 3, title = "children = 3")
-basic_deterministic_trees(children = 4, title = "children = 4")
+deterministic_tree(children = 1, title = "children = 1")
+deterministic_tree(title = "default children = 2")
+deterministic_tree(children = 3, title = "children = 3")
+deterministic_tree(children = 4, title = "children = 4")
 ```
 
 ![](random_trees_presentation_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
 par(mfrow=c(2,2), mar=c(1,1,1,1))
-basic_deterministic_trees(man_children = c(2,3,4), title = "man_children = c(4,3,2)")
-basic_deterministic_trees(man_children = c(3,2,3), title = "man_children = c(3,2,3)")
+deterministic_tree(man_children = c(2,3,4), title = "man_children = c(4,3,2)")
+deterministic_tree(man_children = c(3,2,3), title = "man_children = c(3,2,3)")
 # Having "man_children" length =/= "splits" changes "splits" to length.
-basic_deterministic_trees(man_children = 4, title = "man_children = 4")
-basic_deterministic_trees(man_children = c(3,3,3,3,3), title = "man_children = c(3,3,3,3,3)")
+deterministic_tree(man_children = 4, title = "man_children = 4")
+deterministic_tree(man_children = c(3,3,3,3,3), title = "man_children = c(3,3,3,3,3)")
 ```
 
 ![](random_trees_presentation_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
@@ -104,36 +104,36 @@ basic_deterministic_trees(man_children = c(3,3,3,3,3), title = "man_children = c
 
 ``` r
 par(mfrow=c(2,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 5, title = "all = T")
-basic_deterministic_trees(splits = 5, taper = F, title = "scale_thickness = T, taper = F")
-basic_deterministic_trees(splits = 5, scale_thickness = F, taper = F, title = "scale_thickness = F, taper = F")
-basic_deterministic_trees(splits = 5, scale_length = F, title = "scale_length = F")
-basic_deterministic_trees(splits = 5, scale_angle = F, title = "scale_angle = F")
+deterministic_tree(splits = 5, title = "all = T")
+deterministic_tree(splits = 5, taper = F, title = "scale_thickness = T, taper = F")
+deterministic_tree(splits = 5, scale_thickness = F, taper = F, title = "scale_thickness = F, taper = F")
+deterministic_tree(splits = 5, scale_length = F, title = "scale_length = F")
+deterministic_tree(splits = 5, scale_angle = F, title = "scale_angle = F")
 ```
 
 ![](random_trees_presentation_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-#### Explore “sib\_ratio” which determines relative length of children at each split
+#### Explore “sib\_lgth\_ratio” which determines relative length of children at each split
 
 ``` r
 par(mfrow=c(2,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 8, sib_ratio = c(1,2), title = "splits = 8, sib_ratio = c(1,2)")
-basic_deterministic_trees(splits = 6, sib_ratio = c(1,2,1), title = "splits = 6, sib_ratio = c(1,2,1)")
-basic_deterministic_trees(splits = 5, sib_ratio = c(1,2,2,1), title = "splits = 5, sib_ratio = c(1,2,2,1)")
-basic_deterministic_trees(splits = 5, sib_ratio = c(2,1,1,2), title = "splits = 5, sib_ratio = c(1,2,2,1)")
-basic_deterministic_trees(splits = 6, sib_ratio = c(1,2,3), title = "splits = 6, sib_ratio = c(1,2,3)")
-basic_deterministic_trees(splits = 6, sib_ratio = c(2,1,2), title = "splits = 6, sib_ratio = c(1,2,3)")
+deterministic_tree(splits = 8, sib_lgth_ratio = c(1,2), title = "splits = 8, sib_ratio = c(1,2)")
+deterministic_tree(splits = 6, sib_lgth_ratio = c(1,2,1), title = "splits = 6, sib_ratio = c(1,2,1)")
+deterministic_tree(splits = 5, sib_lgth_ratio = c(1,2,2,1), title = "splits = 5, sib_ratio = c(1,2,2,1)")
+deterministic_tree(splits = 5, sib_lgth_ratio = c(2,1,1,2), title = "splits = 5, sib_ratio = c(1,2,2,1)")
+deterministic_tree(splits = 6, sib_lgth_ratio = c(1,2,3), title = "splits = 6, sib_ratio = c(1,2,3)")
+deterministic_tree(splits = 6, sib_lgth_ratio = c(2,1,2), title = "splits = 6, sib_ratio = c(1,2,3)")
 ```
 
 ![](random_trees_presentation_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-#### Explore “trunk\_scale”. It simply shrinks the starter branch. Other arguments: “splits = 6, angle\_scale = 1.25, sib\_ratio = c(1,5,1)”
+#### Explore “trunk\_scale”. It simply shrinks the starter branch. Other arguments: “splits = 6, angle\_scale = 1.25, sib\_lgth\_ratio = c(1,5,1)”
 
 ``` r
 par(mfrow=c(1,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 6, angle_scale = 1.25, sib_ratio = c(1,5,1), title = "default: trunk_scale = 1")
-basic_deterministic_trees(splits = 6, trunk_scale = 0.75, angle_scale = 1.25, sib_ratio = c(1,5,1), title = "trunk_scale = 0.75")
-basic_deterministic_trees(splits = 6, trunk_scale = 0.25, angle_scale = 1.25, sib_ratio = c(1,4,1), title = "trunk_scale = 0.25")
+deterministic_tree(splits = 6, angle_scale = 1.25, sib_lgth_ratio = c(1,5,1), title = "default: trunk_scale = 1")
+deterministic_tree(splits = 6, trunk_scale = 0.75, angle_scale = 1.25, sib_lgth_ratio = c(1,5,1), title = "trunk_scale = 0.75")
+deterministic_tree(splits = 6, trunk_scale = 0.25, angle_scale = 1.25, sib_lgth_ratio = c(1,4,1), title = "trunk_scale = 0.25")
 ```
 
 ![](random_trees_presentation_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
@@ -156,11 +156,11 @@ casually reproduce some of the examples he provides. I do so below.
 
 ``` r
 par(mfrow=c(1,3), mar=c(1,1,1,1))
-basic_deterministic_trees(splits = 8, children = 2, angle = 9*pi/12, scale_angle = F, 
+deterministic_tree(splits = 8, children = 2, angle = 9*pi/12, scale_angle = F, 
                           scale_thickness = F, taper = F, thickness = 0.5, length_scale = 1.5)
-basic_deterministic_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, 
+deterministic_tree(splits = 8, children = 2, angle = pi/4, scale_angle = F, 
                           scale_thickness = F, taper = F, thickness = 0.5, length_scale = 1.5)
-basic_deterministic_trees(splits = 8, children = 2, angle = pi/20, scale_angle = F, 
+deterministic_tree(splits = 8, children = 2, angle = pi/20, scale_angle = F, 
                           scale_thickness = F, taper = F, thickness = 0.5, length_scale = 1.5)
 ```
 
@@ -198,7 +198,7 @@ rls <- c(rep(F,8),rep(T,8))
 ``` r
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
-  random_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+  random_tree(splits = 8, children = 2, angle = pi/4, scale_angle = F, length_scale = 1.4, random_angles = ras[i], random_lengths = rls[i], title = titles[i])
 }
 ```
 
@@ -209,7 +209,7 @@ for(i in 1:16){
 ``` r
 par(mfrow=c(4,4), mar=c(1,1,1,1))
 for(i in 1:16){
-  random_trees(splits = 6, trunk_scale = 0.5, angle_scale = 1.25, sib_ratio = c(1,3,1), random_angles = ras[i], random_lengths = rls[i], title = titles[i])
+  random_tree(splits = 6, trunk_scale = 0.5, angle_scale = 1.25, sib_lgth_ratio = c(1,3,1), random_angles = ras[i], random_lengths = rls[i], title = titles[i])
 }
 ```
 
@@ -225,8 +225,8 @@ random field of to create a GIF of a “swaying” tree. The images for the
 GIF file are stored locally before being deleted upon GIF formation.
 
 ``` r
-fractal_tree <- suppressMessages(random_trees(splits = 8, children = 2, angle = pi/4, scale_angle = F, random_angles = T, 
-                                              random_lengths = T, length_scale = 1.4, plot = F, datadump = T))
+fractal_tree <- random_tree(splits = 8, children = 2, angle = pi/4, scale_angle = F, random_angles = T, 
+                            random_lengths = T, length_scale = 1.4, plot = F, datadump = T)
 ```
 
 This code lives in the function <code>swaying\_tree()</code>, with
@@ -247,9 +247,11 @@ raster::plot(raster::raster(simu))
 An example input and possible GIF.
 
 ``` r
-swaying_tree(fractal_tree, var = 0.02, scale = 0.4)
+filename <- swaying_tree(fractal_tree, var = 0.02, scale = 0.4, return_filename = T)
 ```
 
-    ## [1] GIF file saved as swaying_trees/swaying_tree_2020-12-03_10:34:05_PST.gif within folder 'swaying_trees' in current directory.
+<center>
 
-<img src="swaying_trees/swaying_tree_2020-12-02_14:54:08_PST.gif">
+<img src="swaying_trees/swaying_tree_2020-12-07_04:25:09_PST.gif">
+
+</center>
