@@ -19,14 +19,6 @@ fractal_tree <- random_tree(splits = 9, children = 2, angle = pi/4, scale_angle 
 
 <img src="animated_tree_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
 
-``` r
-fractal_tree1 <- random_tree(splits = 9, children = 2, angle = pi/4, sib_lgth_ratio = c(1.5,1), sib_thk_ratio = c(1,1.5), 
-                             angle_scale = 1.05, length_scale = 1.35, plot = F, datadump = T, title = "fractal_tree1")
-fractal_tree2 <- deterministic_tree(splits = 7, trunk_scale = 0.25, angle_scale = 1.25, sib_thk_ratio = c(1,2,1), 
-                                    sib_lgth_ratio = c(1,5,1), plot = F, datadump = T, title = "fractal_tree2")
-fractal_tree3 <- random_tree(splits = 7, sib_lgth_ratio = c(1,2,1), angle = pi/6, plot = F, datadump = T, title = "fractal_tree3")
-```
-
 ## Swaying Tree
 
 Generates a random field to create a GIF animation of a tree “swaying”
@@ -50,7 +42,7 @@ Example:
 
 <center>
 
-<img src="swaying_trees/swaying_tree_2020-12-07_23:24:27_PST.gif">
+<img src="swaying_trees/swaying_tree_2020-12-07_23:53:04_PST.gif">
 
 </center>
 
@@ -85,7 +77,7 @@ Example:
 
 <center>
 
-<img src="growing_trees/growing_tree_2020-12-07_23:24:32_PST.gif">
+<img src="growing_trees/growing_tree_2020-12-07_23:53:08_PST.gif">
 
 </center>
 
